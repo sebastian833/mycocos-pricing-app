@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useData } from '@/lib/context'
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, TrendingUp, BarChart2, Sliders, MessageCircle } from 'lucide-react'
+import { parseShopyLibreFile } from '@/lib/parser-client'
 
 export default function Home() {
   const { data, setData, setFileName } = useData()
@@ -20,15 +21,16 @@ export default function Home() {
     setLoading(true)
     setError('')
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await fetch('/api/parse', { method: 'POST', body: formData })
-      if (!res.ok) throw new Error('Error procesando el archivo')
-      const parsed = await res.json()
+      const buffer = await file.arrayBuffer()
+      const parsed = await parseShopyLibreFile(buffer)
+      if (!parsed.productos || parsed.productos.length === 0) {
+        throw new Error('No se encontraron productos.')
+      }
       setData(parsed)
       setFileName(file.name)
-    } catch {
-      setError('No se pudo procesar el archivo. Asegúrate de que sea un reporte de ShopyLibre.')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setError('No se pudo procesar el archivo: ' + msg)
     } finally {
       setLoading(false)
     }
@@ -69,8 +71,8 @@ export default function Home() {
           <input id="fileInput" type="file" accept=".xlsx,.xls" className="hidden" onChange={onFileChange} />
           {loading ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-gray-600 text-sm">Procesando archivo...</p>
+              <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-gray-600 text-sm">Procesando archivo... puede tomar unos segundos</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
@@ -96,7 +98,6 @@ export default function Home() {
               </p>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-3 mb-6">
             {data.resumen.map(r => (
               <div key={r.año} className="bg-gray-50 rounded-xl p-4">
@@ -106,7 +107,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-
           <div className="grid grid-cols-3 gap-2 mb-6">
             <button onClick={() => router.push('/informe')} className="flex flex-col items-center gap-1.5 p-3 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors">
               <BarChart2 className="text-blue-600" size={20} />
@@ -121,11 +121,7 @@ export default function Home() {
               <span className="text-xs font-medium text-purple-700">Chat IA</span>
             </button>
           </div>
-
-          <button
-            onClick={() => { setData(null); setFileName('') }}
-            className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={() => { setData(null); setFileName('') }} className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors">
             Cargar otro archivo
           </button>
         </div>
@@ -135,22 +131,6 @@ export default function Home() {
         <div className="mt-4 flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-xl text-sm">
           <AlertCircle size={16} />
           {error}
-        </div>
-      )}
-
-      {!data && (
-        <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-          {[
-            { icon: BarChart2, title: 'Informe de precios', desc: 'Evolución mes a mes y temporadas' },
-            { icon: Sliders, title: 'Simulador', desc: 'Precio nacional e internacional' },
-            { icon: MessageCircle, title: 'Chat IA', desc: 'Consultas sobre tus datos' },
-          ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="bg-white border border-gray-200 rounded-xl p-4">
-              <Icon className="text-gray-400 mx-auto mb-2" size={22} />
-              <p className="text-sm font-medium text-gray-700">{title}</p>
-              <p className="text-xs text-gray-400 mt-1">{desc}</p>
-            </div>
-          ))}
         </div>
       )}
     </div>
