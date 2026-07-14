@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useData } from '@/lib/context'
-import { BarChart2, TrendingUp, Sliders, MessageCircle, Upload } from 'lucide-react'
+import { BarChart2, TrendingUp, Sliders, MessageCircle, Upload, Sparkles } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Inicio', icon: Upload },
   { href: '/informe', label: 'Informe', icon: BarChart2 },
+  { href: '/recomendador', label: 'Recomendador', icon: Sparkles },
   { href: '/simulador', label: 'Simulador', icon: Sliders },
   { href: '/chat', label: 'Chat IA', icon: MessageCircle },
 ]
@@ -32,20 +33,18 @@ export default function Nav() {
                 key={href}
                 href={href}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  active
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  active ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <Icon size={15} />
-                {label}
+                <span className="hidden sm:inline">{label}</span>
               </Link>
             )
           })}
         </nav>
 
         {fileName && (
-          <span className="text-xs text-gray-400 hidden md:block truncate max-w-[200px]">
+          <span className="text-xs text-gray-400 hidden lg:block truncate max-w-[180px]">
             {fileName}
           </span>
         )}
