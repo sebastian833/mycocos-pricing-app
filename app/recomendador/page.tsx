@@ -4,9 +4,15 @@ import { useState, useEffect } from 'react'
 import { useData } from '@/lib/context'
 import { useRouter } from 'next/navigation'
 import { analyzePricing } from '@/lib/pricing-engine'
-import { Sparkles, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
+import { Sparkles, TrendingUp, TrendingDown, Minus, Info, Package } from 'lucide-react'
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+
+interface PackBOM {
+  nombre: string
+  costo_real_bom: number
+  costo_registrado: number | null
+}
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 
@@ -14,14 +20,30 @@ export default function Recomendador() {
   const { data } = useData()
   const router = useRouter()
   const [selIdx, setSelIdx] = useState(0)
+  const [packsBOM, setPacksBOM] = useState<Record<string, number>>({})
 
   useEffect(() => { if (!data) router.push('/') }, [data, router])
+
+  useEffect(() => {
+    fetch('/packs.json')
+      .then(res => res.json())
+      .then((packs: PackBOM[]) => {
+        const map: Record<string, number> = {}
+        packs.forEach(p => {
+          if (p.costo_real_bom > 0) map[p.nombre.trim()] = p.costo_real_bom
+        })
+        setPacksBOM(map)
+      })
+      .catch(() => {})
+  }, [])
+
   if (!data || !data.productos || data.productos.length === 0) return null
 
   const prod = data.productos[Math.min(selIdx, data.productos.length - 1)]
   if (!prod) return null
 
-  const analysis = analyzePricing(prod)
+  const costoBOM = packsBOM[prod.nombre.trim()]
+  const analysis = analyzePricing(prod, costoBOM)
   const currentMonth = new Date().getMonth()
 
   const elasticidadInfo = {
@@ -52,6 +74,19 @@ export default function Recomendador() {
         ))}
       </select>
 
+      {analysis.costoFuente === 'bom' && (
+        <div className="flex items-center gap-2.5 bg-indigo-50 border border-indigo-200 rounded-xl p-3.5 mb-4">
+          <Package className="text-indigo-600 flex-shrink-0" size={16} />
+          <p className="text-xs text-indigo-800">
+            Este producto es un pack. Usando el <strong>costo real calculado de sus componentes</strong> ({fmt(analysis.costo)})
+            {analysis.costoRegistrado > 0 && analysis.costoRegistrado !== analysis.costo && (
+              <> en vez del registrado en ShopyLibre ({fmt(analysis.costoRegistrado)}).</>
+            )}
+            {' '}Ver detalle en la pestaña <strong>Packs</strong>.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <p className="text-xs text-gray-500 mb-1">Precio evergreen</p>
@@ -66,7 +101,7 @@ export default function Recomendador() {
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <p className="text-xs text-gray-500 mb-1">Costo neto</p>
           <p className="text-lg font-semibold text-gray-900">{fmt(analysis.costo)}</p>
-          <p className="text-xs text-gray-400">unitario</p>
+          <p className="text-xs text-gray-400">{analysis.costoFuente === 'bom' ? 'real (BOM)' : 'unitario'}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <p className="text-xs text-gray-500 mb-1">Elasticidad</p>

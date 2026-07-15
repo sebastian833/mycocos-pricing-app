@@ -17,6 +17,8 @@ export interface PricingAnalysis {
   precioEvergreen: number
   precioPiso: number
   costo: number
+  costoFuente: 'bom' | 'registrado'
+  costoRegistrado: number
   elasticidad: number
   clasificacionElasticidad: 'elástico' | 'inelástico' | 'neutro'
   recomendaciones: MonthRecommendation[]
@@ -48,16 +50,19 @@ function roundChilean(price: number): number {
   return Math.round(price / 1000) * 1000 - 10 // ej: 51.990
 }
 
-export function analyzePricing(prod: ProductData): PricingAnalysis {
+export function analyzePricing(prod: ProductData, costoBOM?: number): PricingAnalysis {
   const meses = prod.meses.filter(m => m.q25 > 0 && m.pb25 > 0)
   if (meses.length === 0) {
     return {
-      precioEvergreen: 0, precioPiso: 0, costo: 0, elasticidad: 0,
-      clasificacionElasticidad: 'neutro', recomendaciones: [],
+      precioEvergreen: 0, precioPiso: 0, costo: 0, costoFuente: 'registrado', costoRegistrado: 0,
+      elasticidad: 0, clasificacionElasticidad: 'neutro', recomendaciones: [],
     }
   }
 
-  const costo = prod.costo_avg
+  const costoRegistrado = prod.costo_avg
+  const usarBOM = costoBOM !== undefined && costoBOM > 0
+  const costo = usarBOM ? costoBOM : costoRegistrado
+  const costoFuente: 'bom' | 'registrado' = usarBOM ? 'bom' : 'registrado'
 
   // 1. PISO: precio mínimo para mantener margen mínimo
   const precioPisoNeto = costo / (1 - MARGEN_MINIMO)
@@ -157,6 +162,8 @@ export function analyzePricing(prod: ProductData): PricingAnalysis {
     precioEvergreen: roundChilean(precioEvergreen),
     precioPiso,
     costo,
+    costoFuente,
+    costoRegistrado,
     elasticidad: parseFloat(elasticidad.toFixed(2)),
     clasificacionElasticidad,
     recomendaciones,
