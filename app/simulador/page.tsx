@@ -3,9 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useData } from '@/lib/context'
 import { useRouter } from 'next/navigation'
-import { Calculator, TrendingUp, TrendingDown } from 'lucide-react'
+import { Calculator, TrendingUp, TrendingDown, Minus, CalendarDays } from 'lucide-react'
 import TierScenarios from '@/components/TierScenarios'
-import type { Categoria } from '@/lib/pricing-tiers'
+import { calcularElasticidad, calcularEscenarios, CALENDARIO_MESES, type Categoria } from '@/lib/pricing-tiers'
+
+const MESES_NOMBRE = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+const TIER_BADGE = {
+  tier1: { label: 'Oferta Fuerte', bg: 'bg-red-100', text: 'text-red-700' },
+  tier2: { label: 'Oferta Media', bg: 'bg-amber-100', text: 'text-amber-700' },
+  tier3: { label: 'Precio Normal', bg: 'bg-green-100', text: 'text-green-700' },
+}
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 function fmtM(n: number) {
@@ -102,8 +109,19 @@ export default function Simulador() {
   const diffVsHistorico = precioEfectivo - prod.precio_bruto_avg
   const diffPct = prod.precio_bruto_avg > 0 ? (diffVsHistorico / prod.precio_bruto_avg) * 100 : 0
 
+  const { clasificacion: elasticidadClass } = calcularElasticidad(prod.meses)
+  const escenariosMensuales = calcularEscenarios(costo, categoria)
+  const maxVolumen = Math.max(...prod.meses.map(m => m.q25), 1)
+
+  const elasticidadInfo = {
+    'elástico': { icon: TrendingUp, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', texto: 'Cuando bajas el precio, las ventas suben harto. Vale la pena dar descuentos fuertes en fechas como Cyber Day o Black Friday.' },
+    'inelástico': { icon: Minus, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', texto: 'Aunque bajes el precio, no vendes mucho más. Mejor mantener el precio alto incluso en ofertas.' },
+    'neutro': { icon: TrendingDown, color: 'text-gray-700', bg: 'bg-gray-50 border-gray-200', texto: 'Las ventas suben un poco con descuentos, sin ser un cambio grande.' },
+  }[elasticidadClass]
+  const ElastIcon = elasticidadInfo.icon
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <div className="mb-5 text-center">
         <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-2xl mb-3">
           <Calculator className="text-blue-600" size={22} />
@@ -122,9 +140,63 @@ export default function Simulador() {
         ))}
       </select>
 
+      {/* Elasticidad */}
+      <div className={`flex items-start gap-2.5 border rounded-xl p-4 mb-5 ${elasticidadInfo.bg}`}>
+        <ElastIcon className={`${elasticidadInfo.color} flex-shrink-0 mt-0.5`} size={18} />
+        <p className={`text-sm ${elasticidadInfo.color}`}>{elasticidadInfo.texto}</p>
+      </div>
+
       <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">¿A qué precio venderlo?</h2>
         <TierScenarios costo={costo} categoria={categoria} onCategoriaChange={setCategoria} showCategoriaToggle={categoria !== 'unitario'} />
+      </div>
+
+      {/* Calendario mensual */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <CalendarDays size={16} className="text-gray-700" />
+          <h2 className="text-sm font-semibold text-gray-900">Qué precio usar cada mes</h2>
+        </div>
+        <p className="text-xs text-gray-500 mb-4">Según cuándo son las fechas importantes y cuánto se vendió el año pasado</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-gray-200">
+              <tr>
+                <th className="py-2 text-left text-xs font-medium text-gray-500">Mes</th>
+                <th className="py-2 text-left text-xs font-medium text-gray-500">Fecha importante</th>
+                <th className="py-2 text-left text-xs font-medium text-gray-500">Ventas el año pasado</th>
+                <th className="py-2 text-left text-xs font-medium text-gray-500">Qué usar</th>
+                <th className="py-2 text-right text-xs font-medium text-gray-500">Precio sugerido</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {CALENDARIO_MESES.map((cm, i) => {
+                const mesData = prod.meses[i]
+                const badge = TIER_BADGE[cm.tierSugerido]
+                const escenario = escenariosMensuales[cm.tierSugerido === 'tier1' ? 0 : cm.tierSugerido === 'tier2' ? 1 : 2]
+                const barWidth = mesData ? Math.max(4, (mesData.q25 / maxVolumen) * 100) : 0
+                return (
+                  <tr key={cm.mes}>
+                    <td className="py-2 font-medium text-gray-900">{MESES_NOMBRE[i]}</td>
+                    <td className="py-2 text-gray-500 text-xs">{cm.temporada}</td>
+                    <td className="py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-400 rounded-full" style={{ width: `${barWidth}%` }} />
+                        </div>
+                        <span className="text-xs text-gray-500">{mesData?.q25?.toLocaleString() || 0}</span>
+                      </div>
+                    </td>
+                    <td className="py-2">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>{badge.label}</span>
+                    </td>
+                    <td className="py-2 text-right font-semibold text-gray-900">{fmt(escenario.precioSugerido)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="border-t border-gray-200 pt-6 mb-2">

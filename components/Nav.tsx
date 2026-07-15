@@ -3,12 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useData } from '@/lib/context'
-import { BarChart2, TrendingUp, Sliders, MessageCircle, Upload, Sparkles, Camera, Package } from 'lucide-react'
+import { BarChart2, TrendingUp, Sliders, MessageCircle, Upload, Camera, Package } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Inicio', icon: Upload },
   { href: '/informe', label: 'Informe', icon: BarChart2 },
-  { href: '/recomendador', label: 'Recomendador', icon: Sparkles },
   { href: '/packs', label: 'Packs', icon: Package },
   { href: '/simulador', label: 'Simulador', icon: Sliders },
   { href: '/competidores', label: 'Competencia', icon: Camera },
