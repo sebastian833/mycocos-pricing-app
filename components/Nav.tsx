@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useData } from '@/lib/context'
-import { BarChart2, TrendingUp, Sliders, MessageCircle, Upload, Sparkles, Camera } from 'lucide-react'
+import { BarChart2, TrendingUp, Sliders, MessageCircle, Upload, Sparkles, Camera, Package } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Inicio', icon: Upload },
   { href: '/informe', label: 'Informe', icon: BarChart2 },
   { href: '/recomendador', label: 'Recomendador', icon: Sparkles },
+  { href: '/packs', label: 'Packs', icon: Package },
   { href: '/simulador', label: 'Simulador', icon: Sliders },
   { href: '/competidores', label: 'Competencia', icon: Camera },
   { href: '/chat', label: 'Chat IA', icon: MessageCircle },
@@ -45,7 +46,7 @@ export default function Nav() {
         </nav>
 
         {fileName && (
-          <span className="text-xs text-gray-400 hidden xl:block truncate max-w-[150px]">
+          <span className="text-xs text-gray-400 hidden xl:block truncate max-w-[130px]">
             {fileName}
           </span>
         )}
