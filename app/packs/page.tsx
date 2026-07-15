@@ -86,7 +86,7 @@ export default function Packs() {
             <Package className="text-indigo-600" size={20} />
             <h1 className="text-xl font-semibold text-gray-900">Packs y armador de precios</h1>
           </div>
-          <p className="text-sm text-gray-500">Costo real desde receta (BOM) y precio sugerido en 3 escenarios</p>
+          <p className="text-sm text-gray-500">Arma combos de productos y mira a qué precio venderlos</p>
         </div>
         <button
           onClick={() => setModoBuilder(!modoBuilder)}
@@ -100,7 +100,7 @@ export default function Packs() {
       {/* PACK BUILDER */}
       {modoBuilder && (
         <div className="bg-white border-2 border-indigo-200 rounded-2xl p-5 mb-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-3">Arma tu pack seleccionando componentes</h2>
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Elige qué productos van en el pack</h2>
 
           <input
             value={nombreNuevo}
@@ -112,7 +112,7 @@ export default function Packs() {
           <div className="grid grid-cols-2 gap-4 mb-4">
             {/* Catalog selector */}
             <div>
-              <p className="text-xs text-gray-500 mb-2">Catálogo de componentes ({catalogo.length})</p>
+              <p className="text-xs text-gray-500 mb-2">Todos los productos ({catalogo.length})</p>
               <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto divide-y divide-gray-100">
                 {catalogo.map(c => (
                   <button
@@ -133,7 +133,7 @@ export default function Packs() {
 
             {/* Selected items */}
             <div>
-              <p className="text-xs text-gray-500 mb-2">Componentes seleccionados ({itemsNuevo.length})</p>
+              <p className="text-xs text-gray-500 mb-2">Lo que ya agregaste ({itemsNuevo.length})</p>
               <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto divide-y divide-gray-100 min-h-[100px]">
                 {itemsNuevo.length === 0 && (
                   <p className="text-xs text-gray-300 p-4 text-center">Selecciona componentes del catálogo</p>
@@ -166,7 +166,7 @@ export default function Packs() {
               <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
                 <span className="text-sm text-indigo-800">
                   Costo total del pack: <strong>{fmt(costoNuevo)}</strong>
-                  {' '}· Clasificado como <strong>{categoriaNuevo === 'pack' ? 'Pack (multi-unidad)' : 'Kit (combo curado)'}</strong>
+                  {' '}· Es un <strong>{categoriaNuevo === 'pack' ? 'pack de unidades iguales' : 'combo de productos distintos'}</strong>
                 </span>
               </div>
               <TierScenarios costo={costoNuevo} categoria={categoriaNuevo} onCategoriaChange={setCategoriaNuevo} showCategoriaToggle />
@@ -192,11 +192,11 @@ export default function Packs() {
             <>
               <div className="grid grid-cols-3 gap-3 mb-5">
                 <div className="bg-white border border-gray-200 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Costo real (BOM)</p>
+                  <p className="text-xs text-gray-500 mb-1">Lo que cuesta hacerlo</p>
                   <p className="text-lg font-semibold text-indigo-700">{fmt(pack.costo_real_bom)}</p>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Costo registrado</p>
+                  <p className="text-xs text-gray-500 mb-1">Lo que dice el sistema</p>
                   <p className="text-lg font-semibold text-gray-900">{pack.costo_registrado ? fmt(pack.costo_registrado) : '—'}</p>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-xl p-4">
@@ -206,7 +206,7 @@ export default function Packs() {
               </div>
 
               <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-5">
-                <h2 className="text-sm font-semibold text-gray-900 mb-4">Escenarios de precio sugerido</h2>
+                <h2 className="text-sm font-semibold text-gray-900 mb-4">¿A qué precio venderlo?</h2>
                 <TierScenarios
                   costo={pack.costo_real_bom}
                   categoria={categoriaActiva}
@@ -217,14 +217,14 @@ export default function Packs() {
 
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <span className="text-sm font-medium text-gray-700">Componentes ({pack.componentes.length})</span>
+                  <span className="text-sm font-medium text-gray-700">Qué trae este pack ({pack.componentes.length})</span>
                 </div>
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Componente</th>
                       <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Cantidad</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Costo unitario</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Cuánto cuesta</th>
                       <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Subtotal</th>
                     </tr>
                   </thead>
@@ -246,7 +246,7 @@ export default function Packs() {
       )}
 
       <p className="text-xs text-gray-400 mt-4">
-        Clasificación automática: si el pack repite el mismo SKU (multi-compra) se trata como &quot;Pack&quot;; si combina productos distintos, como &quot;Kit&quot;. Puedes corregirlo manualmente con el selector.
+        Este pack se detecta como &quot;productos distintos&quot; o &quot;unidades iguales&quot; automáticamente, pero siempre puedes cambiarlo tú mismo con los botones de arriba.
       </p>
     </div>
   )

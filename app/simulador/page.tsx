@@ -108,8 +108,8 @@ export default function Simulador() {
         <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-2xl mb-3">
           <Calculator className="text-blue-600" size={22} />
         </div>
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">Calculadora de precio y margen</h1>
-        <p className="text-sm text-gray-500">Ingresa los valores y mira el resultado al instante</p>
+        <h1 className="text-xl font-semibold text-gray-900 mb-1">Calculadora de precio</h1>
+        <p className="text-sm text-gray-500">Escribe los números y mira el resultado al instante</p>
       </div>
 
       <select
@@ -123,12 +123,12 @@ export default function Simulador() {
       </select>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Escenarios sugeridos (3 tiers)</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">¿A qué precio venderlo?</h2>
         <TierScenarios costo={costo} categoria={categoria} onCategoriaChange={setCategoria} showCategoriaToggle={categoria !== 'unitario'} />
       </div>
 
       <div className="border-t border-gray-200 pt-6 mb-2">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Calculadora detallada con volumen</p>
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Si vendes varias unidades, calcula el total aquí</p>
       </div>
 
       {/* Toggle mercado */}
@@ -161,15 +161,15 @@ export default function Simulador() {
               <NumberInput label="Tipo de cambio" value={tc} onChange={setTc} prefix="$" hint="CLP por USD" />
             </>
           )}
-          <NumberInput label="Costo unitario" value={costo} onChange={setCosto} prefix="$" hint={packsBOM[prod.nombre.trim()] ? 'Costo real calculado de sus componentes (pack)' : 'Costo neto del producto'} />
-          <NumberInput label="Volumen a vender" value={volumen} onChange={setVolumen} suffix="un." hint="Unidades proyectadas" />
+          <NumberInput label="Cuánto cuesta hacerlo" value={costo} onChange={setCosto} prefix="$" hint={packsBOM[prod.nombre.trim()] ? 'Costo real de sus productos (es un pack)' : 'El costo de producción o compra'} />
+          <NumberInput label="Cuántas unidades vas a vender" value={volumen} onChange={setVolumen} suffix="un." hint="Cuántas esperas vender" />
         </div>
       </div>
 
       {/* Resultado principal */}
       <div className={`border rounded-2xl p-5 mb-4 ${margenBg}`}>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-gray-700">Margen por unidad</span>
+          <span className="text-sm font-medium text-gray-700">Ganas por cada unidad</span>
           <div className="flex items-center gap-1.5">
             {margenPct >= (prod.margen_avg || 0) ? <TrendingUp size={16} className={margenColor} /> : <TrendingDown size={16} className={margenColor} />}
             <span className={`text-2xl font-bold ${margenColor}`}>{margenPct.toFixed(1)}%</span>
@@ -177,11 +177,11 @@ export default function Simulador() {
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-gray-500">Precio neto (s/IVA)</span>
+            <span className="text-gray-500">Precio sin IVA</span>
             <p className="font-semibold text-gray-900">{fmt(precioNeto)}</p>
           </div>
           <div>
-            <span className="text-gray-500">Margen unitario</span>
+            <span className="text-gray-500">Ganancia por unidad</span>
             <p className="font-semibold text-gray-900">{fmt(margenUnitario)}</p>
           </div>
         </div>
@@ -196,15 +196,15 @@ export default function Simulador() {
           </p>
         </div>
         <div className="bg-gray-900 rounded-2xl p-4">
-          <p className="text-xs text-gray-400 mb-1">Margen total</p>
+          <p className="text-xs text-gray-400 mb-1">Ganancia total</p>
           <p className={`text-xl font-bold ${margenTotal >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtM(margenTotal)}</p>
         </div>
       </div>
 
       {/* Comparación vs histórico */}
       <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700">
-        <strong>Referencia:</strong> el precio promedio histórico de este producto es {fmt(prod.precio_bruto_avg)} con margen {prod.margen_avg}%.
-        {' '}Tu simulación está {diffPct >= 0 ? <span className="text-green-700 font-medium">+{diffPct.toFixed(1)}% arriba</span> : <span className="text-red-700 font-medium">{diffPct.toFixed(1)}% abajo</span>} del histórico.
+        <strong>Dato de referencia:</strong> normalmente este producto se vende a {fmt(prod.precio_bruto_avg)} y se gana {prod.margen_avg}%.
+        {' '}Tu cálculo está {diffPct >= 0 ? <span className="text-green-700 font-medium">+{diffPct.toFixed(1)}% más caro</span> : <span className="text-red-700 font-medium">{diffPct.toFixed(1)}% más barato</span>} que lo normal.
       </div>
     </div>
   )
