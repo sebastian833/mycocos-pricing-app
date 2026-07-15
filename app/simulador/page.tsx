@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useData } from '@/lib/context'
 import { useRouter } from 'next/navigation'
 import { Calculator, TrendingUp, TrendingDown } from 'lucide-react'
+import TierScenarios from '@/components/TierScenarios'
+import type { Categoria } from '@/lib/pricing-tiers'
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 function fmtM(n: number) {
@@ -52,6 +54,8 @@ export default function Simulador() {
   const [precioUSD, setPrecioUSD] = useState(55)
   const [tc, setTc] = useState(950)
 
+  const [categoria, setCategoria] = useState<Categoria>('unitario')
+
   useEffect(() => { if (!data) router.push('/') }, [data, router])
 
   useEffect(() => {
@@ -74,6 +78,7 @@ export default function Simulador() {
     setDescuento(0)
     setVolumen(Math.round(p.volumen_total / 12))
     setPrecioUSD(Math.round(p.precio_bruto_avg / 950))
+    setCategoria(p.tipo === 'PACKS MY COCOS' ? 'kit' : 'unitario')
   }, [selIdx, data])
 
   if (!data || !data.productos || data.productos.length === 0) return null
@@ -98,7 +103,7 @@ export default function Simulador() {
   const diffPct = prod.precio_bruto_avg > 0 ? (diffVsHistorico / prod.precio_bruto_avg) * 100 : 0
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="mb-5 text-center">
         <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-2xl mb-3">
           <Calculator className="text-blue-600" size={22} />
@@ -116,6 +121,15 @@ export default function Simulador() {
           <option key={p.nombre} value={i}>{p.nombre}</option>
         ))}
       </select>
+
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">Escenarios sugeridos (3 tiers)</h2>
+        <TierScenarios costo={costo} categoria={categoria} onCategoriaChange={setCategoria} showCategoriaToggle={categoria !== 'unitario'} />
+      </div>
+
+      <div className="border-t border-gray-200 pt-6 mb-2">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Calculadora detallada con volumen</p>
+      </div>
 
       {/* Toggle mercado */}
       <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
