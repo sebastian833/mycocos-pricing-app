@@ -53,6 +53,11 @@ export default function Packs() {
 
   useEffect(() => { setOverrideCategoria(null) }, [selIdx])
 
+  useEffect(() => {
+    const skusUnicos = new Set(itemsNuevo.map(i => i.sku))
+    setCategoriaNuevo(skusUnicos.size <= 1 ? 'pack' : 'kit')
+  }, [itemsNuevo])
+
   if (!data || loading) return null
 
   const pack = packs[Math.min(selIdx, packs.length - 1)]
@@ -72,10 +77,6 @@ export default function Packs() {
     return sum + (cat ? cat.costo * it.qty : 0)
   }, 0)
 
-  useEffect(() => {
-    const skusUnicos = new Set(itemsNuevo.map(i => i.sku))
-    setCategoriaNuevo(skusUnicos.size <= 1 ? 'pack' : 'kit')
-  }, [itemsNuevo])
 
   return (
     <div>
