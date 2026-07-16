@@ -5,7 +5,7 @@ import { useData } from '@/lib/context'
 import { useRouter } from 'next/navigation'
 import { Calculator, TrendingUp, TrendingDown, Minus, CalendarDays } from 'lucide-react'
 import TierScenarios from '@/components/TierScenarios'
-import { calcularElasticidad, calcularEscenarios, CALENDARIO_MESES, type Categoria } from '@/lib/pricing-tiers'
+import { calcularElasticidad, calcularEscenarios, CALENDARIO_MESES } from '@/lib/pricing-tiers'
 
 const MESES_NOMBRE = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const TIER_BADGE = {
@@ -49,7 +49,6 @@ export default function Simulador() {
   const router = useRouter()
   const [selIdx, setSelIdx] = useState(0)
   const [mercado, setMercado] = useState<'nacional' | 'internacional'>('nacional')
-  const [packsBOM, setPacksBOM] = useState<Record<string, number>>({})
 
   // Nacional
   const [precioVenta, setPrecioVenta] = useState(50000)
@@ -61,35 +60,24 @@ export default function Simulador() {
   const [precioUSD, setPrecioUSD] = useState(55)
   const [tc, setTc] = useState(950)
 
-  const [categoria, setCategoria] = useState<Categoria>('unitario')
-
   useEffect(() => { if (!data) router.push('/') }, [data, router])
 
-  useEffect(() => {
-    fetch('/packs.json')
-      .then(res => res.json())
-      .then((packs: { nombre: string; costo_real_bom: number }[]) => {
-        const map: Record<string, number> = {}
-        packs.forEach(p => { if (p.costo_real_bom > 0) map[p.nombre.trim()] = p.costo_real_bom })
-        setPacksBOM(map)
-      })
-      .catch(() => {})
-  }, [])
+  // Solo productos unitarios — los packs/kits tienen su propia pestaña dedicada
+  const productos = data?.productos.filter(p => p.tipo !== 'PACKS MY COCOS') || []
 
   useEffect(() => {
-    if (!data || !data.productos.length) return
-    const p = data.productos[Math.min(selIdx, data.productos.length - 1)]
-    const costoBOM = packsBOM[p.nombre.trim()]
+    if (!productos.length) return
+    const p = productos[Math.min(selIdx, productos.length - 1)]
     setPrecioVenta(p.precio_bruto_avg)
-    setCosto(costoBOM || p.costo_avg)
+    setCosto(p.costo_avg)
     setDescuento(0)
     setVolumen(Math.round(p.volumen_total / 12))
     setPrecioUSD(Math.round(p.precio_bruto_avg / 950))
-    setCategoria(p.tipo === 'PACKS MY COCOS' ? 'kit' : 'unitario')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selIdx, data])
 
-  if (!data || !data.productos || data.productos.length === 0) return null
-  const prod = data.productos[Math.min(selIdx, data.productos.length - 1)]
+  if (!data || productos.length === 0) return null
+  const prod = productos[Math.min(selIdx, productos.length - 1)]
   if (!prod) return null
 
   const IVA = 1.19
@@ -110,7 +98,7 @@ export default function Simulador() {
   const diffPct = prod.precio_bruto_avg > 0 ? (diffVsHistorico / prod.precio_bruto_avg) * 100 : 0
 
   const { clasificacion: elasticidadClass } = calcularElasticidad(prod.meses)
-  const escenariosMensuales = calcularEscenarios(costo, categoria)
+  const escenariosMensuales = calcularEscenarios(costo, 'unitario')
   const maxVolumen = Math.max(...prod.meses.map(m => m.q25), 1)
 
   const elasticidadInfo = {
@@ -135,7 +123,7 @@ export default function Simulador() {
         onChange={e => setSelIdx(+e.target.value)}
         className="w-full mb-4 px-3 py-2.5 text-sm border border-gray-300 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
       >
-        {data.productos.map((p, i) => (
+        {productos.map((p, i) => (
           <option key={p.nombre} value={i}>{p.nombre}</option>
         ))}
       </select>
@@ -148,7 +136,7 @@ export default function Simulador() {
 
       <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">¿A qué precio venderlo?</h2>
-        <TierScenarios costo={costo} categoria={categoria} onCategoriaChange={setCategoria} showCategoriaToggle={categoria !== 'unitario'} />
+        <TierScenarios costo={costo} categoria="unitario" />
       </div>
 
       {/* Calendario mensual */}
@@ -233,7 +221,7 @@ export default function Simulador() {
               <NumberInput label="Tipo de cambio" value={tc} onChange={setTc} prefix="$" hint="CLP por USD" />
             </>
           )}
-          <NumberInput label="Cuánto cuesta hacerlo" value={costo} onChange={setCosto} prefix="$" hint={packsBOM[prod.nombre.trim()] ? 'Costo real de sus productos (es un pack)' : 'El costo de producción o compra'} />
+          <NumberInput label="Cuánto cuesta hacerlo" value={costo} onChange={setCosto} prefix="$" hint="El costo de producción o compra" />
           <NumberInput label="Cuántas unidades vas a vender" value={volumen} onChange={setVolumen} suffix="un." hint="Cuántas esperas vender" />
         </div>
       </div>
