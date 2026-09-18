@@ -91,6 +91,9 @@ export default function Packs() {
     : 0
   const faltantes = ganador ? ganador.componentes.filter(c => c.costo === null && !costosManual[c.nombre]) : []
 
+  // Solo ítems sueltos en el armador — sin kits/packs ya armados
+  const catalogoSuelto = catalogo.filter(c => c.tipo !== 'PACKS MY COCOS')
+
   // Builder helpers
   const agregarItem = (sku: string) => {
     if (itemsNuevo.find(i => i.sku === sku)) return
@@ -284,9 +287,9 @@ export default function Packs() {
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <p className="text-xs text-gray-500 mb-2">Todos los productos ({catalogo.length})</p>
+              <p className="text-xs text-gray-500 mb-2">Ítems sueltos ({catalogoSuelto.length})</p>
               <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto divide-y divide-gray-100">
-                {catalogo.map(c => (
+                {catalogoSuelto.map(c => (
                   <button
                     key={c.sku}
                     onClick={() => agregarItem(c.sku)}
@@ -304,13 +307,18 @@ export default function Packs() {
             </div>
 
             <div>
-              <p className="text-xs text-gray-500 mb-2">Lo que ya agregaste ({itemsNuevo.length})</p>
+              <p className="text-xs text-gray-500 mb-2 flex justify-between pr-2">
+                <span>Lo que ya agregaste ({itemsNuevo.length})</span>
+                <span className="text-gray-400">% del costo</span>
+              </p>
               <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto divide-y divide-gray-100 min-h-[100px]">
                 {itemsNuevo.length === 0 && (
                   <p className="text-xs text-gray-300 p-4 text-center">Selecciona productos de la lista</p>
                 )}
                 {itemsNuevo.map(it => {
-                  const cat = catalogo.find(c => c.sku === it.sku)
+                  const cat = catalogoSuelto.find(c => c.sku === it.sku)
+                  const subtotal = (cat?.costo || 0) * it.qty
+                  const pctDelTotal = costoNuevo > 0 ? (subtotal / costoNuevo) * 100 : 0
                   return (
                     <div key={it.sku} className="flex items-center justify-between px-3 py-2 text-xs">
                       <span className="text-gray-700 truncate flex-1">{cat?.nombre}</span>
@@ -321,7 +329,8 @@ export default function Packs() {
                         onChange={e => cambiarQty(it.sku, +e.target.value || 1)}
                         className="w-12 px-1 py-0.5 text-center border border-gray-200 rounded mx-2"
                       />
-                      <span className="text-gray-400 w-16 text-right">{fmt((cat?.costo || 0) * it.qty)}</span>
+                      <span className="text-gray-400 w-16 text-right">{fmt(subtotal)}</span>
+                      <span className="text-indigo-400 w-12 text-right">{pctDelTotal.toFixed(0)}%</span>
                       <button onClick={() => quitarItem(it.sku)} className="ml-2 text-gray-300 hover:text-red-500">
                         <X size={13} />
                       </button>
