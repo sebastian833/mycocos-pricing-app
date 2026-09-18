@@ -140,6 +140,13 @@ export default function Packs() {
       </div>
 
       {/* ===== GANADORES ===== */}
+      {modo === 'ganadores' && !ganador && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+          <Trophy className="text-gray-300 mx-auto mb-3" size={32} />
+          <p className="font-medium text-gray-700 mb-1">Aún no hay packs cargados para {marcaActual.nombre}</p>
+          <p className="text-sm text-gray-400">Usa &quot;Armar nuevo&quot; para simular combos con los ítems sueltos de esta marca.</p>
+        </div>
+      )}
       {modo === 'ganadores' && ganador && (
         <>
           <select
@@ -208,6 +215,13 @@ export default function Packs() {
       )}
 
       {/* ===== TODOS LOS PACKS ===== */}
+      {modo === 'todos' && packs.length === 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+          <List className="text-gray-300 mx-auto mb-3" size={32} />
+          <p className="font-medium text-gray-700 mb-1">Aún no hay historial de packs para {marcaActual.nombre}</p>
+          <p className="text-sm text-gray-400">Usa &quot;Armar nuevo&quot; para simular combos con los ítems sueltos de esta marca.</p>
+        </div>
+      )}
       {modo === 'todos' && packs.length > 0 && pack && (
         <>
           <select

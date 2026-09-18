@@ -1,1 +1,79 @@
-[]
+[
+  {
+    "nombre": "KIT PRIME (Myhuevos 3.0 pro + Nasal) NEGRO",
+    "componentes": [
+      {
+        "nombre": "Pack completo (costo directo de maestra)",
+        "qty": 1,
+        "costo": 82714,
+        "regalo": false
+      }
+    ]
+  },
+  {
+    "nombre": "KIT PRIME (Myhuevos 3.0 pro + Nasal) AZUL",
+    "componentes": [
+      {
+        "nombre": "Pack completo (costo directo de maestra)",
+        "qty": 1,
+        "costo": 82714,
+        "regalo": false
+      }
+    ]
+  },
+  {
+    "nombre": "ESENCIAL KIT Azul (Myh + Hojilla) 4.0",
+    "componentes": [
+      {
+        "nombre": "Pack completo (costo directo de maestra)",
+        "qty": 1,
+        "costo": 63461,
+        "regalo": false
+      }
+    ]
+  },
+  {
+    "nombre": "ESENCIAL KIT Negro (Myh + Hojilla) 4.0",
+    "componentes": [
+      {
+        "nombre": "Pack completo (costo directo de maestra)",
+        "qty": 1,
+        "costo": 64306,
+        "regalo": false
+      }
+    ]
+  },
+  {
+    "nombre": "THE MASTER PACK PRO - MyHUEVOS® AZUL (Myh+1 hojillas+travel+safety+nasal+cortauña+deso)",
+    "componentes": [
+      {
+        "nombre": "Pack completo (costo directo de maestra)",
+        "qty": 1,
+        "costo": 215463,
+        "regalo": false
+      }
+    ]
+  },
+  {
+    "nombre": "THE MASTER PACK PRO - MyHUEVOS® NEGRO (Myh+1 hojillas+travel+safety+nasal+cortauña+deso)",
+    "componentes": [
+      {
+        "nombre": "Pack completo (costo directo de maestra)",
+        "qty": 1,
+        "costo": 215635,
+        "regalo": false
+      }
+    ]
+  },
+  {
+    "nombre": "KIT - THE PERFECT COUPLE MyHUEVOS®",
+    "componentes": [
+      {
+        "nombre": "Pack completo (costo directo de maestra)",
+        "qty": 1,
+        "costo": 114862,
+        "regalo": false
+      }
+    ]
+  }
+]
