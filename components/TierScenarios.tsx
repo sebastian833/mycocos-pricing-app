@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { calcularEscenarios, margenPorPrecio, roundChilean, type Categoria } from '@/lib/pricing-tiers'
-import { Flame, Star, Leaf, Gift, Boxes } from 'lucide-react'
+import { useData } from '@/lib/context'
+import { Flame, Star, Leaf, Gift, Boxes, Plus, X } from 'lucide-react'
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 
@@ -11,6 +12,9 @@ const TIER_INFO = {
   tier2: { icon: Star, nombre: 'Oferta Media', cuando: 'Para promociones normales', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
   tier3: { icon: Leaf, nombre: 'Precio Normal', cuando: 'El precio de todos los días', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700' },
 }
+
+interface CatalogItem { sku: string; nombre: string; costo: number }
+interface RegaloAgregado { sku: string; nombre: string; costo: number }
 
 export default function TierScenarios({
   costo,
@@ -23,18 +27,40 @@ export default function TierScenarios({
   onCategoriaChange?: (c: Categoria) => void
   showCategoriaToggle?: boolean
 }) {
+  const { marcaActual } = useData()
   const [inflarPct, setInflarPct] = useState(12)
   const [precioCustom, setPrecioCustom] = useState<number | ''>('')
+  const [catalogo, setCatalogo] = useState<CatalogItem[]>([])
+  const [regalos, setRegalos] = useState<RegaloAgregado[]>([])
+  const [mostrarSelector, setMostrarSelector] = useState(false)
 
-  const escenarios = calcularEscenarios(costo, categoria)
+  useEffect(() => {
+    fetch(marcaActual.componentesFile)
+      .then(r => r.json())
+      .then(setCatalogo)
+      .catch(() => setCatalogo([]))
+    setRegalos([])
+  }, [marcaActual, costo])
+
+  const costoRegalos = regalos.reduce((s, r) => s + r.costo, 0)
+  const costoTotal = costo + costoRegalos
+
+  const escenarios = calcularEscenarios(costoTotal, categoria)
   const evergreen = escenarios[2]
 
   useEffect(() => {
     setPrecioCustom(evergreen.precioSugerido)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [costo, categoria])
+  }, [costoTotal, categoria])
 
-  const margenCustom = precioCustom !== '' ? margenPorPrecio(costo, Number(precioCustom)) : 0
+  const margenCustom = precioCustom !== '' ? margenPorPrecio(costoTotal, Number(precioCustom)) : 0
+
+  const agregarRegalo = (item: CatalogItem) => {
+    if (regalos.find(r => r.sku === item.sku)) return
+    setRegalos([...regalos, { sku: item.sku, nombre: item.nombre, costo: item.costo }])
+    setMostrarSelector(false)
+  }
+  const quitarRegalo = (sku: string) => setRegalos(regalos.filter(r => r.sku !== sku))
 
   if (costo <= 0) {
     return <p className="text-sm text-gray-400">Ingresa un costo válido para ver los precios sugeridos.</p>
@@ -52,7 +78,7 @@ export default function TierScenarios({
                 categoria === 'kit' ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
-              <Gift className={categoria === 'kit' ? 'text-indigo-600' : 'text-gray-400'} size={24} />
+              <Boxes className={categoria === 'kit' ? 'text-indigo-600' : 'text-gray-400'} size={24} />
               <p className={`text-sm font-semibold mt-2 ${categoria === 'kit' ? 'text-indigo-900' : 'text-gray-700'}`}>
                 Productos distintos juntos
               </p>
@@ -73,6 +99,64 @@ export default function TierScenarios({
           </div>
         </div>
       )}
+
+      {/* Sección de regalos */}
+      <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Gift size={15} className="text-pink-600" />
+            <p className="text-sm font-medium text-pink-800">¿Le agregas algún regalo a este pack?</p>
+          </div>
+          <button
+            onClick={() => setMostrarSelector(!mostrarSelector)}
+            className="flex items-center gap-1 text-xs font-medium text-pink-700 bg-pink-100 hover:bg-pink-200 px-2.5 py-1 rounded-lg transition-colors"
+          >
+            <Plus size={12} /> Agregar regalo
+          </button>
+        </div>
+        <p className="text-xs text-pink-600 mb-2">
+          Sube el costo total y baja la ganancia, pero así sabes el número real
+        </p>
+
+        {mostrarSelector && (
+          <div className="border border-pink-200 bg-white rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100 mb-2">
+            {catalogo.length === 0 && (
+              <p className="text-xs text-gray-400 p-3 text-center">No hay productos en el catálogo todavía</p>
+            )}
+            {catalogo.map(item => (
+              <button
+                key={item.sku}
+                onClick={() => agregarRegalo(item)}
+                disabled={!!regalos.find(r => r.sku === item.sku)}
+                className="w-full flex items-center justify-between px-3 py-2 text-left text-xs hover:bg-pink-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <span className="text-gray-700 truncate">{item.nombre}</span>
+                <span className="text-gray-400 flex-shrink-0 ml-2">{fmt(item.costo)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {regalos.length > 0 && (
+          <div className="space-y-1.5">
+            {regalos.map(r => (
+              <div key={r.sku} className="flex items-center justify-between bg-white rounded-lg px-3 py-1.5 text-sm">
+                <span className="text-gray-700 truncate">{r.nombre}</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-gray-500 text-xs">+{fmt(r.costo)}</span>
+                  <button onClick={() => quitarRegalo(r.sku)} className="text-gray-300 hover:text-red-500">
+                    <X size={13} />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center justify-between px-3 pt-1.5 border-t border-pink-200 text-sm font-medium">
+              <span className="text-pink-800">Costo con regalos</span>
+              <span className="text-pink-800">{fmt(costo)} + {fmt(costoRegalos)} = {fmt(costoTotal)}</span>
+            </div>
+          </div>
+        )}
+      </div>
 
       <p className="text-sm font-medium text-gray-700 mb-2.5">Estos son los precios sugeridos</p>
       <div className="grid grid-cols-3 gap-3 mb-5">
