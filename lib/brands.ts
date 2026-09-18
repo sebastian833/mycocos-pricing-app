@@ -27,7 +27,7 @@ export const BRANDS: Brand[] = [
   {
     id: 'myhuevos',
     nombre: 'MyHUEVOS',
-    pais: 'Chile',
+    pais: 'Colombia',
     emoji: '🥚',
     color: 'amber',
     dataFile: '/data-myhuevos.json',

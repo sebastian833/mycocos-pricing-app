@@ -158,6 +158,16 @@ export default function TierScenarios({
         )}
       </div>
 
+      {/* Resumen de costo — siempre visible */}
+      <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-5">
+        <span className="text-sm text-gray-600">
+          {regalos.length > 0 ? 'Costo total (con regalos)' : 'Cuánto cuesta hacerlo'}
+        </span>
+        <span className="text-base font-semibold text-gray-900">
+          {regalos.length > 0 ? `${fmt(costo)} + ${fmt(costoRegalos)} = ${fmt(costoTotal)}` : fmt(costoTotal)}
+        </span>
+      </div>
+
       <p className="text-sm font-medium text-gray-700 mb-2.5">Estos son los precios sugeridos</p>
       <div className="grid grid-cols-3 gap-3 mb-5">
         {escenarios.map(e => {
@@ -167,6 +177,7 @@ export default function TierScenarios({
           const gananciaPct = categoria === 'unitario' && e.margenRango
             ? `${(e.margenRango[0] * 100).toFixed(0)}–${(e.margenRango[1] * 100).toFixed(0)}%`
             : `${(e.margenObjetivo * 100).toFixed(0)}%`
+          const gananciaPesos = e.precioNeto - costoTotal
           return (
             <div key={e.tier.key} className={`border-2 rounded-2xl p-4 ${info.bg} ${info.border}`}>
               <div className="flex items-center gap-1.5 mb-1">
@@ -181,6 +192,7 @@ export default function TierScenarios({
               <div className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium ${info.bg} ${info.text} border ${info.border}`}>
                 Ganas {gananciaPct}
               </div>
+              <p className="text-xs text-gray-500 mt-1.5">= {fmt(gananciaPesos)} de ganancia c/u</p>
             </div>
           )
         })}
@@ -204,7 +216,7 @@ export default function TierScenarios({
 
       <div className="bg-gray-900 rounded-2xl p-4">
         <p className="text-sm text-white font-medium mb-1">¿Quieres poner otro precio?</p>
-        <p className="text-xs text-gray-400 mb-3">Escríbelo y te decimos cuánto ganas</p>
+        <p className="text-xs text-gray-400 mb-3">Escríbelo y te decimos cuánto ganas (costo: {fmt(costoTotal)})</p>
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-[160px]">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
@@ -219,6 +231,9 @@ export default function TierScenarios({
             <span className="text-xs text-gray-400 block">Ganas</span>
             <p className={`text-2xl font-bold ${margenCustom >= 55 ? 'text-green-400' : margenCustom >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
               {margenCustom.toFixed(0)}%
+            </p>
+            <p className="text-xs text-gray-400">
+              {precioCustom !== '' ? fmt(Math.round(Number(precioCustom) / 1.19) - costoTotal) : '—'} por unidad
             </p>
           </div>
         </div>
