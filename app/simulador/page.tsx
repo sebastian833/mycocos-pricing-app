@@ -5,7 +5,7 @@ import { useData } from '@/lib/context'
 import { useRouter } from 'next/navigation'
 import { Calculator, TrendingUp, TrendingDown, Minus, CalendarDays } from 'lucide-react'
 import TierScenarios from '@/components/TierScenarios'
-import { calcularElasticidad, calcularEscenarios, CALENDARIO_MESES } from '@/lib/pricing-tiers'
+import { calcularElasticidad, calcularEscenarios, getCalendario } from '@/lib/pricing-tiers'
 
 const MESES_NOMBRE = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const TIER_BADGE = {
@@ -45,7 +45,7 @@ function NumberInput({ label, value, onChange, prefix, suffix, hint }: {
 }
 
 export default function Simulador() {
-  const { data } = useData()
+  const { data, marcaActual } = useData()
   const router = useRouter()
   const [selIdx, setSelIdx] = useState(0)
   const [mercado, setMercado] = useState<'nacional' | 'internacional'>('nacional')
@@ -98,6 +98,7 @@ export default function Simulador() {
   const diffPct = prod.precio_bruto_avg > 0 ? (diffVsHistorico / prod.precio_bruto_avg) * 100 : 0
 
   const { clasificacion: elasticidadClass } = calcularElasticidad(prod.meses)
+  const calendario = getCalendario(marcaActual.pais)
   const escenariosMensuales = calcularEscenarios(costo, 'unitario')
   const maxVolumen = Math.max(...prod.meses.map(m => m.q25), 1)
 
@@ -158,7 +159,7 @@ export default function Simulador() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {CALENDARIO_MESES.map((cm, i) => {
+              {calendario.map((cm, i) => {
                 const mesData = prod.meses[i]
                 const badge = TIER_BADGE[cm.tierSugerido]
                 const escenario = escenariosMensuales[cm.tierSugerido === 'tier1' ? 0 : cm.tierSugerido === 'tier2' ? 1 : 2]
@@ -221,7 +222,7 @@ export default function Simulador() {
               <NumberInput label="Tipo de cambio" value={tc} onChange={setTc} prefix="$" hint="CLP por USD" />
             </>
           )}
-          <NumberInput label="Cuánto cuesta hacerlo" value={costo} onChange={setCosto} prefix="$" hint="El costo de producción o compra" />
+          <NumberInput label="Último costo" value={costo} onChange={setCosto} prefix="$" hint="El costo de producción o compra" />
           <NumberInput label="Cuántas unidades vas a vender" value={volumen} onChange={setVolumen} suffix="un." hint="Cuántas esperas vender" />
         </div>
       </div>

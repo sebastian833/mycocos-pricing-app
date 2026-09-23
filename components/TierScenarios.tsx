@@ -161,7 +161,7 @@ export default function TierScenarios({
       {/* Resumen de costo — siempre visible */}
       <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-5">
         <span className="text-sm text-gray-600">
-          {regalos.length > 0 ? 'Costo total (con regalos)' : 'Cuánto cuesta hacerlo'}
+          {regalos.length > 0 ? 'Costo total (con regalos)' : 'Último costo'}
         </span>
         <span className="text-base font-semibold text-gray-900">
           {regalos.length > 0 ? `${fmt(costo)} + ${fmt(costoRegalos)} = ${fmt(costoTotal)}` : fmt(costoTotal)}

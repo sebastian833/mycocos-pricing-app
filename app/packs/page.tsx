@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useData } from '@/lib/context'
 import { detectarCategoria, type Categoria } from '@/lib/pricing-tiers'
 import TierScenarios from '@/components/TierScenarios'
-import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle } from 'lucide-react'
+import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane } from 'lucide-react'
 
 interface Componente { sku: string; nombre: string; qty: number; costo_unit: number }
 interface PackData {
@@ -33,6 +33,8 @@ export default function Packs() {
   const [ganadores, setGanadores] = useState<PackGanador[]>([])
   const [selGanador, setSelGanador] = useState(0)
   const [costosManual, setCostosManual] = useState<Record<string, number>>({})
+  const [costosAereo, setCostosAereo] = useState<Record<string, number>>({})
+  const [expandido, setExpandido] = useState<string | null>(null)
 
   // Todos los packs
   const [packs, setPacks] = useState<PackData[]>([])
@@ -81,12 +83,16 @@ export default function Packs() {
   const pack = packs[Math.min(selIdx, packs.length - 1)]
   const categoriaDetectada = pack ? detectarCategoria(pack.componentes) : 'kit'
   const categoriaActiva = overrideCategoria || categoriaDetectada
+  const costoPackTodos = pack
+    ? pack.componentes.reduce((sum, c) => sum + (c.costo_unit + (costosAereo[c.nombre] || 0)) * c.qty, 0)
+    : 0
 
   const ganador = ganadores[Math.min(selGanador, ganadores.length - 1)]
   const costoGanador = ganador
     ? ganador.componentes.reduce((sum, c) => {
         const costoReal = c.costo ?? costosManual[c.nombre] ?? 0
-        return sum + costoReal * c.qty
+        const extraAereo = costosAereo[c.nombre] || 0
+        return sum + (costoReal + extraAereo) * c.qty
       }, 0)
     : 0
   const faltantes = ganador ? ganador.componentes.filter(c => c.costo === null && !costosManual[c.nombre]) : []
@@ -176,30 +182,75 @@ export default function Packs() {
             <div className="divide-y divide-gray-100">
               {ganador.componentes.map((c, i) => {
                 const sinCosto = c.costo === null
+                const key = c.nombre
+                const abierto = expandido === key
+                const extra = costosAereo[key] || 0
+                const costoBase = c.costo ?? costosManual[key] ?? 0
                 return (
-                  <div key={i} className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {c.regalo && (
-                        <span className="flex items-center gap-1 text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-medium">
-                          <Gift size={11} /> Regalo
-                        </span>
-                      )}
-                      <span className="text-sm text-gray-900">{c.nombre}</span>
-                      {c.qty > 1 && <span className="text-xs text-gray-400">×{c.qty}</span>}
-                    </div>
-                    {sinCosto ? (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-amber-600">$</span>
-                        <input
-                          type="number"
-                          placeholder="costo"
-                          value={costosManual[c.nombre] || ''}
-                          onChange={e => setCostosManual({ ...costosManual, [c.nombre]: +e.target.value || 0 })}
-                          className="w-24 px-2 py-1 text-sm border border-amber-300 bg-amber-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200"
-                        />
+                  <div key={i}>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {c.regalo && (
+                          <span className="flex items-center gap-1 text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-medium">
+                            <Gift size={11} /> Regalo
+                          </span>
+                        )}
+                        <span className="text-sm text-gray-900">{c.nombre}</span>
+                        {c.qty > 1 && <span className="text-xs text-gray-400">×{c.qty}</span>}
+                        {extra > 0 && (
+                          <span className="flex items-center gap-1 text-xs bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full font-medium">
+                            <Plane size={10} /> +{fmt(extra)}
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      <span className="text-sm text-gray-500">{fmt((c.costo || 0) * c.qty)}</span>
+                      <div className="flex items-center gap-3">
+                        {sinCosto ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-amber-600">$</span>
+                            <input
+                              type="number"
+                              placeholder="costo"
+                              value={costosManual[key] || ''}
+                              onChange={e => setCostosManual({ ...costosManual, [key]: +e.target.value || 0 })}
+                              className="w-24 px-2 py-1 text-sm border border-amber-300 bg-amber-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">{fmt((costoBase + extra) * c.qty)}</span>
+                        )}
+                        <button
+                          onClick={() => setExpandido(abierto ? null : key)}
+                          className="text-gray-300 hover:text-sky-500 transition-colors"
+                          title="Agregar costo aéreo u otro ajuste"
+                        >
+                          <Plane size={15} />
+                        </button>
+                      </div>
+                    </div>
+                    {abierto && (
+                      <div className="px-4 pb-3 bg-sky-50">
+                        <label className="block text-xs text-sky-700 mb-1.5">
+                          Costo aéreo extra (o cualquier ajuste sobre el costo registrado ${fmt(costoBase)})
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-sky-600">+$</span>
+                          <input
+                            type="number"
+                            value={extra || ''}
+                            placeholder="0"
+                            onChange={e => setCostosAereo({ ...costosAereo, [key]: +e.target.value || 0 })}
+                            className="w-28 px-2 py-1 text-sm border border-sky-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-200"
+                          />
+                          {extra > 0 && (
+                            <button
+                              onClick={() => { const c2 = { ...costosAereo }; delete c2[key]; setCostosAereo(c2) }}
+                              className="text-xs text-sky-500 hover:text-red-500"
+                            >
+                              Quitar
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )
@@ -236,8 +287,8 @@ export default function Packs() {
 
           <div className="grid grid-cols-3 gap-3 mb-5">
             <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <p className="text-xs text-gray-500 mb-1">Lo que cuesta hacerlo</p>
-              <p className="text-lg font-semibold text-indigo-700">{fmt(pack.costo_real_bom)}</p>
+              <p className="text-xs text-gray-500 mb-1">Último costo</p>
+              <p className="text-lg font-semibold text-indigo-700">{fmt(costoPackTodos)}</p>
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <p className="text-xs text-gray-500 mb-1">Lo que dice el sistema</p>
@@ -252,7 +303,7 @@ export default function Packs() {
           <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-5">
             <h2 className="text-sm font-semibold text-gray-900 mb-4">¿A qué precio venderlo?</h2>
             <TierScenarios
-              costo={pack.costo_real_bom}
+              costo={costoPackTodos}
               categoria={categoriaActiva}
               onCategoriaChange={setOverrideCategoria}
               showCategoriaToggle
@@ -268,19 +319,64 @@ export default function Packs() {
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Producto</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Cantidad</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Cuánto cuesta</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Último costo</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Subtotal</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-500">✈️</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {pack.componentes.map((c, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-4 py-2.5 text-gray-900">{c.nombre}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-700">{c.qty}×</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{c.costo_unit > 0 ? fmt(c.costo_unit) : 'sin dato'}</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-gray-900">{fmt(c.costo_unit * c.qty)}</td>
-                  </tr>
-                ))}
+                {pack.componentes.map((c, i) => {
+                  const key = c.nombre
+                  const abierto = expandido === key
+                  const extra = costosAereo[key] || 0
+                  return (
+                    <>
+                      <tr key={i} className="hover:bg-gray-50">
+                        <td className="px-4 py-2.5 text-gray-900">
+                          {c.nombre}
+                          {extra > 0 && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-xs bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">
+                              +{fmt(extra)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-gray-700">{c.qty}×</td>
+                        <td className="px-4 py-2.5 text-right text-gray-500">{c.costo_unit > 0 ? fmt(c.costo_unit) : 'sin dato'}</td>
+                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{fmt((c.costo_unit + extra) * c.qty)}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          <button onClick={() => setExpandido(abierto ? null : key)} className="text-gray-300 hover:text-sky-500">
+                            <Plane size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                      {abierto && (
+                        <tr className="bg-sky-50">
+                          <td colSpan={5} className="px-4 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-sky-700">Costo aéreo extra:</span>
+                              <span className="text-xs text-sky-600">+$</span>
+                              <input
+                                type="number"
+                                value={extra || ''}
+                                placeholder="0"
+                                onChange={e => setCostosAereo({ ...costosAereo, [key]: +e.target.value || 0 })}
+                                className="w-28 px-2 py-1 text-sm border border-sky-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-200"
+                              />
+                              {extra > 0 && (
+                                <button
+                                  onClick={() => { const c2 = { ...costosAereo }; delete c2[key]; setCostosAereo(c2) }}
+                                  className="text-xs text-sky-500 hover:text-red-500"
+                                >
+                                  Quitar
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )
+                })}
               </tbody>
             </table>
           </div>
