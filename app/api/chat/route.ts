@@ -4,9 +4,21 @@ import Groq from 'groq-sdk'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
+// Modelos a probar en orden. Los catálogos de Groq cambian seguido, así que si el
+// primero ya no existe, probamos los siguientes automáticamente. Se puede fijar uno
+// específico con la variable de entorno GROQ_MODEL en Vercel.
+const MODELOS_CANDIDATOS = [
+  process.env.GROQ_MODEL,
+  'llama-3.3-70b-versatile',
+  'llama-3.1-70b-versatile',
+  'llama-3.1-8b-instant',
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'gemma2-9b-it',
+].filter((m): m is string => !!m)
+
 export async function POST(req: NextRequest) {
   const apiKey = process.env.GROQ_API_KEY
-  console.log('GROQ_API_KEY present:', !!apiKey, 'length:', apiKey?.length)
 
   if (!apiKey) {
     return NextResponse.json({ error: 'GROQ_API_KEY no configurada' }, { status: 500 })
@@ -21,31 +33,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid messages' }, { status: 400 })
     }
 
-    const systemPrompt = `Eres un analista experto en pricing y márgenes para MyCOCOS, una marca de accesorios de aseo personal vendida en ShopyLibre Chile.
+    const systemPrompt = `Eres un analista experto en pricing y márgenes para el grupo Shopylibre (marcas: MyCOCOS, MyHUEVOS, MENNT), vendidas en Chile, Colombia y México.
 
-Tu rol es ayudar al equipo a tomar decisiones de pricing inteligentes basadas en los datos reales de ventas.
+Tu rol es ayudar al equipo a tomar decisiones de pricing inteligentes basadas en los datos reales de ventas de la marca activa.
 
-Responde siempre en español, de forma concisa y directa. Cuando menciones precios usa formato $XX.XXX CLP. Cuando menciones márgenes usa porcentaje. Cuando hagas comparativas usa tablas simples.
+Responde siempre en español, de forma concisa y directa. Cuando menciones precios usa el formato de moneda local. Cuando menciones márgenes usa porcentaje. Cuando hagas comparativas usa tablas simples.
 
 Contexto de datos cargados:
 ${context || 'No hay datos cargados aún. Pide al usuario que cargue un reporte de ventas.'}
 
-Cuando el usuario pregunte por simulaciones de precio, calcula el impacto en margen directamente. Fórmula: Margen% = (Precio neto - Costo) / Precio neto * 100, donde Precio neto = Precio bruto / 1.19 (IVA Chile 19%).`
+Cuando el usuario pregunte por simulaciones de precio, calcula el impacto en margen directamente. Fórmula: Margen% = (Precio neto - Costo) / Precio neto * 100, donde Precio neto = Precio bruto / 1.19 (IVA Chile 19%, ajustar si aplica otro país).`
 
-    const response = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 1024,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages.map((m: { role: string; content: string }) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        })),
-      ],
-    })
+    const chatMessages = [
+      { role: 'system' as const, content: systemPrompt },
+      ...messages.map((m: { role: string; content: string }) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+    ]
 
-    const reply = response.choices[0]?.message?.content || 'Sin respuesta.'
-    return NextResponse.json({ reply })
+    let lastError: unknown = null
+    for (const modelo of MODELOS_CANDIDATOS) {
+      try {
+        const response = await client.chat.completions.create({
+          model: modelo,
+          max_tokens: 1024,
+          messages: chatMessages,
+        })
+        const reply = response.choices[0]?.message?.content || 'Sin respuesta.'
+        return NextResponse.json({ reply, modeloUsado: modelo })
+      } catch (err: unknown) {
+        lastError = err
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error(`Modelo ${modelo} falló:`, msg)
+        // Si es un error de modelo no encontrado, probamos el siguiente candidato
+        if (msg.includes('model_not_found') || msg.includes('does not exist')) {
+          continue
+        }
+        // Cualquier otro error (auth, rate limit, etc.) lo devolvemos directo
+        throw err
+      }
+    }
+
+    throw lastError || new Error('Ningún modelo de Groq disponible respondió.')
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('Chat error:', msg)
