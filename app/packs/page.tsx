@@ -110,7 +110,8 @@ export default function Packs() {
 
   const costoNuevo = itemsNuevo.reduce((sum, it) => {
     const cat = catalogo.find(c => c.sku === it.sku)
-    return sum + (cat ? cat.costo * it.qty : 0)
+    const extra = costosAereo[it.sku] || 0
+    return sum + (cat ? (cat.costo + extra) * it.qty : 0)
   }, 0)
 
   return (
@@ -427,23 +428,64 @@ export default function Packs() {
                 )}
                 {itemsNuevo.map(it => {
                   const cat = catalogoSuelto.find(c => c.sku === it.sku)
-                  const subtotal = (cat?.costo || 0) * it.qty
+                  const extra = costosAereo[it.sku] || 0
+                  const subtotal = ((cat?.costo || 0) + extra) * it.qty
                   const pctDelTotal = costoNuevo > 0 ? (subtotal / costoNuevo) * 100 : 0
+                  const abierto = expandido === it.sku
                   return (
-                    <div key={it.sku} className="flex items-center justify-between px-3 py-2 text-xs">
-                      <span className="text-gray-700 truncate flex-1">{cat?.nombre}</span>
-                      <input
-                        type="number"
-                        min={1}
-                        value={it.qty}
-                        onChange={e => cambiarQty(it.sku, +e.target.value || 1)}
-                        className="w-12 px-1 py-0.5 text-center border border-gray-200 rounded mx-2"
-                      />
-                      <span className="text-gray-400 w-16 text-right">{fmt(subtotal)}</span>
-                      <span className="text-indigo-400 w-12 text-right">{pctDelTotal.toFixed(0)}%</span>
-                      <button onClick={() => quitarItem(it.sku)} className="ml-2 text-gray-300 hover:text-red-500">
-                        <X size={13} />
-                      </button>
+                    <div key={it.sku}>
+                      <div className="flex items-center justify-between px-3 py-2 text-xs">
+                        <span className="text-gray-700 truncate flex-1">
+                          {cat?.nombre}
+                          {extra > 0 && (
+                            <span className="ml-1.5 inline-flex items-center text-[10px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">
+                              +{fmt(extra)}
+                            </span>
+                          )}
+                        </span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={it.qty}
+                          onChange={e => cambiarQty(it.sku, +e.target.value || 1)}
+                          className="w-12 px-1 py-0.5 text-center border border-gray-200 rounded mx-2"
+                        />
+                        <span className="text-gray-400 w-16 text-right">{fmt(subtotal)}</span>
+                        <span className="text-indigo-400 w-12 text-right">{pctDelTotal.toFixed(0)}%</span>
+                        <button
+                          onClick={() => setExpandido(abierto ? null : it.sku)}
+                          className="ml-2 text-gray-300 hover:text-sky-500"
+                          title="Agregar costo aéreo u otro ajuste"
+                        >
+                          <Plane size={13} />
+                        </button>
+                        <button onClick={() => quitarItem(it.sku)} className="ml-1.5 text-gray-300 hover:text-red-500">
+                          <X size={13} />
+                        </button>
+                      </div>
+                      {abierto && (
+                        <div className="px-3 pb-2 bg-sky-50">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-sky-700">Costo aéreo extra:</span>
+                            <span className="text-[11px] text-sky-600">+$</span>
+                            <input
+                              type="number"
+                              value={extra || ''}
+                              placeholder="0"
+                              onChange={e => setCostosAereo({ ...costosAereo, [it.sku]: +e.target.value || 0 })}
+                              className="w-24 px-2 py-1 text-xs border border-sky-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-200"
+                            />
+                            {extra > 0 && (
+                              <button
+                                onClick={() => { const c2 = { ...costosAereo }; delete c2[it.sku]; setCostosAereo(c2) }}
+                                className="text-[11px] text-sky-500 hover:text-red-500"
+                              >
+                                Quitar
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
