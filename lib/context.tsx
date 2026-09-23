@@ -28,12 +28,19 @@ const DataContext = createContext<DataContextType>({
   tieneDatos: false,
 })
 
-function buildContext(d: ParsedData, nombreMarca: string): string {
+const MONEDA_POR_PAIS: Record<string, { code: string; locale: string }> = {
+  'Chile': { code: 'CLP', locale: 'es-CL' },
+  'Colombia': { code: 'COP', locale: 'es-CO' },
+  'México': { code: 'MXN', locale: 'es-MX' },
+}
+
+function buildContext(d: ParsedData, nombreMarca: string, pais: string): string {
   const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
   const TEMP = ['Año nuevo','Verano','Vuelta clases','Otoño','Día Mamá','CyberDay','Invierno','Invierno','Fiestas Patrias','Pre HotSale','HotSale','Navidad/CyberMonday']
-  const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-CL')} CLP`
-  const fmtM = (n: number) => `$${(n / 1e6).toFixed(1)}M CLP`
-  let ctx = `CONTEXTO DE VENTAS ${nombreMarca.toUpperCase()}\n\n`
+  const moneda = MONEDA_POR_PAIS[pais] || MONEDA_POR_PAIS['Chile']
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString(moneda.locale)} ${moneda.code}`
+  const fmtM = (n: number) => `$${(n / 1e6).toFixed(1)}M ${moneda.code}`
+  let ctx = `CONTEXTO DE VENTAS ${nombreMarca.toUpperCase()} (${pais}) — moneda: ${moneda.code}\n\n`
   d.resumen.forEach(r => {
     ctx += `RESUMEN ${r.año}:\n- Ventas brutas: ${fmtM(r.ventas_brutas)}\n- Unidades: ${r.unidades.toLocaleString()}\n- Margen total: ${fmtM(r.margen_total)}\n- SKUs: ${r.num_skus}\n\n`
   })
@@ -79,7 +86,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       .then(res => res.ok ? res.json() : null)
       .then(json => {
         if (json && json.productos && json.productos.length > 0) {
-          const parsed: ParsedData = { ...json, raw_context: buildContext(json, marcaActual.nombre) }
+          const parsed: ParsedData = { ...json, raw_context: buildContext(json, marcaActual.nombre, marcaActual.pais) }
           setData(parsed)
           setFileName(`${marcaActual.nombre} — datos precargados`)
         } else {

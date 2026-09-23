@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
 Tu rol es ayudar al equipo a tomar decisiones de pricing inteligentes basadas en los datos reales de ventas de la marca activa.
 
-Responde siempre en español, de forma concisa y directa. Cuando menciones precios usa el formato de moneda local. Cuando menciones márgenes usa porcentaje. Cuando hagas comparativas usa tablas simples.
+Responde siempre en español, de forma concisa y directa. El contexto de datos indica al inicio la moneda correcta (CLP, COP o MXN) — úsala siempre, nunca asumas CLP por defecto ni la mezcles entre marcas. Cuando menciones márgenes usa porcentaje. Cuando hagas comparativas usa tablas simples.
 
 Contexto de datos cargados:
 ${context || 'No hay datos cargados aún. Pide al usuario que cargue un reporte de ventas.'}
