@@ -10,11 +10,12 @@ export const maxDuration = 60
 const MODELOS_CANDIDATOS = [
   process.env.GROQ_MODEL,
   'llama-3.3-70b-versatile',
-  'llama-3.1-70b-versatile',
   'llama-3.1-8b-instant',
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
+  'llama-3.1-70b-versatile',
   'gemma2-9b-it',
+  'mixtral-8x7b-32768',
 ].filter((m): m is string => !!m)
 
 export async function POST(req: NextRequest) {
@@ -66,12 +67,14 @@ Cuando el usuario pregunte por simulaciones de precio, calcula el impacto en mar
         lastError = err
         const msg = err instanceof Error ? err.message : String(err)
         console.error(`Modelo ${modelo} falló:`, msg)
-        // Si es un error de modelo no encontrado, probamos el siguiente candidato
-        if (msg.includes('model_not_found') || msg.includes('does not exist')) {
-          continue
+        // Si es un problema de autenticación (API key inválida), no tiene sentido
+        // seguir probando otros modelos — fallará igual en todos.
+        if (msg.includes('401') || msg.toLowerCase().includes('invalid api key') || msg.toLowerCase().includes('unauthorized')) {
+          throw err
         }
-        // Cualquier otro error (auth, rate limit, etc.) lo devolvemos directo
-        throw err
+        // Cualquier otro error (modelo no existe, descontinuado, rate limit puntual, etc.)
+        // probamos el siguiente candidato de la lista.
+        continue
       }
     }
 
