@@ -8,9 +8,9 @@ import { Flame, Star, Leaf, Gift, Boxes, Plus, X } from 'lucide-react'
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 
 const TIER_INFO = {
-  tier1: { icon: Flame, nombre: 'Oferta Fuerte', cuando: 'Para Cyber Day y Black Friday', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700' },
-  tier2: { icon: Star, nombre: 'Oferta Media', cuando: 'Para promociones normales', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
-  tier3: { icon: Leaf, nombre: 'Precio Normal', cuando: 'El precio de todos los días', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700' },
+  tier1: { icon: Flame, nombre: 'Oferta Fuerte (Tier 1)', cuando: 'Para Cyber Day y Black Friday', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700' },
+  tier2: { icon: Star, nombre: 'Oferta Media (Tier 2)', cuando: 'Para promociones normales', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
+  tier3: { icon: Leaf, nombre: 'Precio Normal (Tier 3)', cuando: 'El precio de todos los días', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700' },
 }
 
 interface CatalogItem { sku: string; nombre: string; costo: number }
@@ -61,6 +61,8 @@ export default function TierScenarios({
     setMostrarSelector(false)
   }
   const quitarRegalo = (sku: string) => setRegalos(regalos.filter(r => r.sku !== sku))
+  const actualizarCostoRegalo = (sku: string, nuevoCosto: number) =>
+    setRegalos(regalos.map(r => r.sku === sku ? { ...r, costo: nuevoCosto } : r))
 
   if (costo <= 0) {
     return <p className="text-sm text-gray-400">Ingresa un costo válido para ver los precios sugeridos.</p>
@@ -142,8 +144,14 @@ export default function TierScenarios({
             {regalos.map(r => (
               <div key={r.sku} className="flex items-center justify-between bg-white rounded-lg px-3 py-1.5 text-sm">
                 <span className="text-gray-700 truncate">{r.nombre}</span>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-gray-500 text-xs">+{fmt(r.costo)}</span>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className="text-gray-400 text-xs">+$</span>
+                  <input
+                    type="number"
+                    value={r.costo}
+                    onChange={e => actualizarCostoRegalo(r.sku, +e.target.value || 0)}
+                    className="w-20 px-1.5 py-0.5 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-pink-200"
+                  />
                   <button onClick={() => quitarRegalo(r.sku)} className="text-gray-300 hover:text-red-500">
                     <X size={13} />
                   </button>
