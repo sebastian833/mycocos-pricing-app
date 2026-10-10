@@ -5,31 +5,31 @@
       {
         "nombre": "Rasuradora MyCOCOS® 4.0",
         "qty": 1,
-        "costo": 12179,
+        "costo": 11322,
         "regalo": false
       },
       {
         "nombre": "Rasuradora Facial Daily Shaver MyCOCOS®",
         "qty": 1,
-        "costo": 11897,
+        "costo": 11492,
         "regalo": false
       },
       {
         "nombre": "Rasuradora de Nariz y Orejas MyCOCOS®",
         "qty": 1,
-        "costo": 7597,
+        "costo": 5562,
         "regalo": false
       },
       {
         "nombre": "Safety Razor MyCOCOS®",
         "qty": 1,
-        "costo": 7566,
+        "costo": 7498,
         "regalo": false
       },
       {
         "nombre": "Travel Bag — Bolso de Viaje Café",
         "qty": 1,
-        "costo": 6336,
+        "costo": 6270,
         "regalo": false
       },
       {
@@ -41,7 +41,7 @@
       {
         "nombre": "Desodorante de Cocos 30 ML",
         "qty": 1,
-        "costo": 1815,
+        "costo": 2118,
         "regalo": true
       }
     ]
@@ -52,19 +52,19 @@
       {
         "nombre": "Rasuradora Masculina MyCOCOS® 4.0",
         "qty": 1,
-        "costo": 12179,
+        "costo": 11322,
         "regalo": false
       },
       {
         "nombre": "Rasuradora de Nariz y Orejas MyCOCOS®",
         "qty": 1,
-        "costo": 7597,
+        "costo": 5562,
         "regalo": false
       },
       {
         "nombre": "Facial Safety Razor MyCOCOS®",
         "qty": 1,
-        "costo": 7566,
+        "costo": 7498,
         "regalo": false
       }
     ]
@@ -75,13 +75,13 @@
       {
         "nombre": "Rasuradora Masculina MyCOCOS® 4.0",
         "qty": 1,
-        "costo": 12179,
+        "costo": 11322,
         "regalo": false
       },
       {
         "nombre": "Rasuradora de Nariz y Orejas MyCOCOS®",
         "qty": 1,
-        "costo": 7597,
+        "costo": 5562,
         "regalo": false
       }
     ]
@@ -92,31 +92,31 @@
       {
         "nombre": "Rasuradora MyCOCOS® 4.0",
         "qty": 1,
-        "costo": 12179,
+        "costo": 11322,
         "regalo": false
       },
       {
         "nombre": "Rasuradora de Nariz y Orejas MyCOCOS®",
         "qty": 1,
-        "costo": 7597,
+        "costo": 5562,
         "regalo": false
       },
       {
         "nombre": "Safety Razor MyCOCOS®",
         "qty": 1,
-        "costo": 7566,
+        "costo": 7498,
         "regalo": false
       },
       {
         "nombre": "Pack Trio de Jabones Perfumados MyCOCOS®",
         "qty": 1,
-        "costo": null,
+        "costo": 5887,
         "regalo": false
       },
       {
         "nombre": "Kit de Cortaúñas MyCOCOS®",
         "qty": 1,
-        "costo": 4961,
+        "costo": 4713,
         "regalo": true
       }
     ]
@@ -127,19 +127,19 @@
       {
         "nombre": "Rasuradora MyCOCOS® 4.0",
         "qty": 1,
-        "costo": 12179,
+        "costo": 11322,
         "regalo": false
       },
       {
         "nombre": "Rasuradora de Nariz y Orejas MyCOCOS®",
         "qty": 1,
-        "costo": 7597,
+        "costo": 5562,
         "regalo": false
       },
       {
         "nombre": "Rasuradora Facial Daily Shaver MyCOCOS®",
         "qty": 1,
-        "costo": 11897,
+        "costo": 11492,
         "regalo": false
       }
     ]
@@ -150,19 +150,19 @@
       {
         "nombre": "Rasuradora MyCOCOS® 4.0",
         "qty": 1,
-        "costo": 12179,
+        "costo": 11322,
         "regalo": false
       },
       {
         "nombre": "Espuma para Afeitar",
         "qty": 1,
-        "costo": 4593,
+        "costo": 2313,
         "regalo": false
       },
       {
         "nombre": "Bálsamo After Shave",
         "qty": 1,
-        "costo": 3392,
+        "costo": 2550,
         "regalo": false
       }
     ]
@@ -173,49 +173,49 @@
       {
         "nombre": "Rasuradora MyCOCOS® 4.0",
         "qty": 1,
-        "costo": 12179,
+        "costo": 11322,
         "regalo": false
       },
       {
         "nombre": "Rasuradora de Nariz y Orejas MyCOCOS®",
         "qty": 1,
-        "costo": 7597,
+        "costo": 5562,
         "regalo": false
       },
       {
         "nombre": "Rasuradora Facial Daily Shaver MyCOCOS®",
         "qty": 1,
-        "costo": 11897,
+        "costo": 11492,
         "regalo": false
       },
       {
         "nombre": "Safety Razor MyCOCOS®",
         "qty": 1,
-        "costo": 7566,
+        "costo": 7498,
         "regalo": false
       },
       {
         "nombre": "Travel Bag — Bolso de Viaje",
         "qty": 1,
-        "costo": 6336,
+        "costo": 6270,
         "regalo": false
       },
       {
         "nombre": "Espuma para Afeitar",
         "qty": 1,
-        "costo": 4593,
+        "costo": 2313,
         "regalo": false
       },
       {
         "nombre": "Toallitas Wipe To Go",
         "qty": 1,
-        "costo": 591,
+        "costo": 549,
         "regalo": false
       },
       {
         "nombre": "Cepillos Exfoliante",
         "qty": 1,
-        "costo": null,
+        "costo": 3081,
         "regalo": true
       }
     ]
