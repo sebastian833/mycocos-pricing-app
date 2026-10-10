@@ -390,14 +390,7 @@ export default function Packs() {
       {/* ===== ARMAR NUEVO ===== */}
       {modo === 'nuevo' && (
         <div className="bg-white border-2 border-indigo-200 rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-gray-900 mb-3">Elige qué productos van en el pack</h2>
-
-          <input
-            value={nombreNuevo}
-            onChange={e => setNombreNuevo(e.target.value)}
-            placeholder="Nombre del pack (opcional, solo para identificarlo)"
-            className="w-full mb-4 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          />
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">1. Elige qué productos van en el pack</h2>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
@@ -515,10 +508,23 @@ export default function Packs() {
             </div>
           </div>
 
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-900 mb-1.5">
+              2. Ponle un nombre <span className="font-normal text-gray-400">(opcional, solo para identificarlo)</span>
+            </label>
+            <input
+              value={nombreNuevo}
+              onChange={e => setNombreNuevo(e.target.value)}
+              placeholder="Ej: Kit Verano"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+
           {itemsNuevo.length > 0 && (
             <>
               <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
                 <span className="text-sm text-indigo-800">
+                  {nombreNuevo.trim() && <><strong>{nombreNuevo.trim()}</strong>{' · '}</>}
                   Cuesta en total: <strong>{fmt(costoNuevo)}</strong>
                   {' '}· Es un <strong>{categoriaNuevo === 'pack' ? 'pack de unidades iguales' : 'combo de productos distintos'}</strong>
                 </span>
