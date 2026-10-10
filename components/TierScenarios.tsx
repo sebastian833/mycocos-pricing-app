@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { calcularEscenarios, margenPorPrecio, roundChilean, type Categoria } from '@/lib/pricing-tiers'
 import { useData } from '@/lib/context'
-import { Flame, Star, Leaf, Gift, Boxes, Plus, X, Search } from 'lucide-react'
+import { Flame, Star, Leaf, Gift, Boxes, Plus, X, Search, Save } from 'lucide-react'
 import { filtrarPorTexto } from '@/lib/search'
+import { guardarPackLocal, type ItemGuardado } from '@/lib/saved-packs'
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 
@@ -17,16 +18,33 @@ const TIER_INFO = {
 interface CatalogItem { sku: string; nombre: string; costo: number }
 interface RegaloAgregado { sku: string; nombre: string; costo: number }
 
+// Si se pasa, el componente muestra el bloque "Guardar este pack" (solo el armador lo usa).
+export interface GuardarConfig {
+  nombre: string
+  items: ItemGuardado[]
+  onGuardado?: () => void
+}
+
+type OpcionUnico = 'tier1' | 'tier2' | 'tier3' | 'custom'
+const OPCIONES_UNICO: { key: OpcionUnico; etiqueta: string }[] = [
+  { key: 'tier1', etiqueta: 'Oferta Fuerte (Tier 1)' },
+  { key: 'tier2', etiqueta: 'Oferta Media (Tier 2)' },
+  { key: 'tier3', etiqueta: 'Precio Normal (Tier 3)' },
+  { key: 'custom', etiqueta: 'Otro precio' },
+]
+
 export default function TierScenarios({
   costo,
   categoria,
   onCategoriaChange,
   showCategoriaToggle = false,
+  guardar,
 }: {
   costo: number
   categoria: Categoria
   onCategoriaChange?: (c: Categoria) => void
   showCategoriaToggle?: boolean
+  guardar?: GuardarConfig
 }) {
   const { marcaActual } = useData()
   const [inflarPct, setInflarPct] = useState(12)
@@ -35,6 +53,9 @@ export default function TierScenarios({
   const [regalos, setRegalos] = useState<RegaloAgregado[]>([])
   const [mostrarSelector, setMostrarSelector] = useState(false)
   const [busquedaRegalo, setBusquedaRegalo] = useState('')
+  const [modoGuardar, setModoGuardar] = useState<'tres' | 'uno'>('tres')
+  const [precioUnicoSel, setPrecioUnicoSel] = useState<OpcionUnico>('tier3')
+  const [mensajeGuardado, setMensajeGuardado] = useState('')
 
   useEffect(() => {
     fetch(marcaActual.componentesFile)
@@ -43,6 +64,8 @@ export default function TierScenarios({
       .catch(() => setCatalogo([]))
     setRegalos([])
   }, [marcaActual, costo])
+
+  useEffect(() => { setMensajeGuardado('') }, [costo, categoria, modoGuardar, precioUnicoSel, regalos])
 
   const costoRegalos = regalos.reduce((s, r) => s + r.costo, 0)
   const costoTotal = costo + costoRegalos
@@ -66,6 +89,46 @@ export default function TierScenarios({
   const quitarRegalo = (sku: string) => setRegalos(regalos.filter(r => r.sku !== sku))
   const actualizarCostoRegalo = (sku: string, nuevoCosto: number) =>
     setRegalos(regalos.map(r => r.sku === sku ? { ...r, costo: nuevoCosto } : r))
+
+  const precios = {
+    tier1: escenarios[0].precioSugerido,
+    tier2: escenarios[1].precioSugerido,
+    tier3: escenarios[2].precioSugerido,
+  }
+  const valorOpcion = (k: OpcionUnico) =>
+    k === 'custom' ? (precioCustom === '' ? 0 : Number(precioCustom)) : precios[k]
+  const nombreOk = !!guardar && guardar.nombre.trim().length > 0
+  const hayItems = !!guardar && guardar.items.length > 0
+  const puedeGuardar = nombreOk && hayItems && (modoGuardar === 'tres' || valorOpcion(precioUnicoSel) > 0)
+
+  const guardarPack = () => {
+    if (!guardar || !puedeGuardar) return
+    try {
+      const unico = modoGuardar === 'uno'
+        ? {
+            valor: valorOpcion(precioUnicoSel),
+            etiqueta: OPCIONES_UNICO.find(o => o.key === precioUnicoSel)?.etiqueta || 'Precio',
+          }
+        : undefined
+      const r = guardarPackLocal({
+        nombre: guardar.nombre.trim(),
+        marca: marcaActual.id,
+        categoria,
+        items: guardar.items,
+        regalos: regalos.map(g => ({ sku: g.sku, nombre: g.nombre, costo: g.costo })),
+        costoItems: costo,
+        costoTotal,
+        precios: modoGuardar === 'tres' ? precios : undefined,
+        precioUnico: unico,
+      })
+      setMensajeGuardado(r.actualizado
+        ? 'Listo: ya existía un pack con ese nombre y lo actualicé. Lo ves en la pestaña «Guardados».'
+        : 'Listo: pack guardado. Lo ves en la pestaña «Guardados».')
+      guardar.onGuardado?.()
+    } catch {
+      setMensajeGuardado('No pude guardarlo en este navegador (¿modo privado o sin espacio?).')
+    }
+  }
 
   if (costo <= 0) {
     return <p className="text-sm text-gray-400">Ingresa un costo válido para ver los precios sugeridos.</p>
@@ -264,6 +327,71 @@ export default function TierScenarios({
           </div>
         </div>
       </div>
+
+      {guardar && (
+        <div className="mt-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Save size={15} className="text-emerald-700" />
+            <p className="text-sm font-semibold text-emerald-900">Guardar este pack</p>
+          </div>
+          <p className="text-xs text-emerald-700 mb-3">
+            Queda en la pestaña «Guardados» con sus productos, regalos y costos, para no armarlo de nuevo.
+          </p>
+
+          <p className="text-xs font-medium text-gray-700 mb-1.5">¿Con cuántos precios lo guardas?</p>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <button
+              onClick={() => setModoGuardar('tres')}
+              className={`text-left px-3 py-2.5 rounded-xl border-2 transition-colors ${modoGuardar === 'tres' ? 'border-emerald-400 bg-white' : 'border-emerald-100 bg-emerald-50 hover:border-emerald-200'}`}
+            >
+              <p className="text-sm font-semibold text-gray-900">Con los 3 precios</p>
+              <p className="text-xs text-gray-500">Oferta Fuerte, Media y Normal</p>
+            </button>
+            <button
+              onClick={() => setModoGuardar('uno')}
+              className={`text-left px-3 py-2.5 rounded-xl border-2 transition-colors ${modoGuardar === 'uno' ? 'border-emerald-400 bg-white' : 'border-emerald-100 bg-emerald-50 hover:border-emerald-200'}`}
+            >
+              <p className="text-sm font-semibold text-gray-900">Con un solo precio</p>
+              <p className="text-xs text-gray-500">Elijo cuál se queda</p>
+            </button>
+          </div>
+
+          {modoGuardar === 'uno' && (
+            <div className="mb-3">
+              <p className="text-xs font-medium text-gray-700 mb-1.5">¿Con cuál precio?</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {OPCIONES_UNICO.map(o => {
+                  const v = valorOpcion(o.key)
+                  const activo = precioUnicoSel === o.key
+                  return (
+                    <button
+                      key={o.key}
+                      onClick={() => setPrecioUnicoSel(o.key)}
+                      disabled={v <= 0}
+                      className={`text-left px-3 py-2 rounded-xl border-2 transition-colors disabled:opacity-40 ${activo ? 'border-emerald-400 bg-white' : 'border-emerald-100 bg-emerald-50 hover:border-emerald-200'}`}
+                    >
+                      <p className="text-xs text-gray-500">{o.etiqueta}</p>
+                      <p className="text-sm font-bold text-gray-900">{v > 0 ? fmt(v) : '—'}</p>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {!hayItems && <p className="text-xs text-amber-700 mb-2">Agrega al menos un producto para poder guardarlo.</p>}
+          {hayItems && !nombreOk && <p className="text-xs text-amber-700 mb-2">Para guardarlo, ponle un nombre en el paso 2.</p>}
+
+          <button
+            onClick={guardarPack}
+            disabled={!puedeGuardar}
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Save size={14} /> Guardar pack
+          </button>
+          {mensajeGuardado && <p className="text-xs text-emerald-800 mt-2">{mensajeGuardado}</p>}
+        </div>
+      )}
     </div>
   )
 }

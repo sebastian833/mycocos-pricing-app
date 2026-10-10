@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useData } from '@/lib/context'
-import { detectarCategoria, type Categoria } from '@/lib/pricing-tiers'
+import { detectarCategoria, margenPorPrecio, type Categoria } from '@/lib/pricing-tiers'
 import TierScenarios from '@/components/TierScenarios'
-import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane, Search } from 'lucide-react'
+import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane, Search, Bookmark, Download, Upload, Trash2 } from 'lucide-react'
 import { filtrarPorTexto } from '@/lib/search'
+import { cargarPacks, eliminarPack, exportarPacks, importarPacks, type PackGuardado } from '@/lib/saved-packs'
 
 interface Componente { sku: string; nombre: string; qty: number; costo_unit: number }
 interface PackData {
@@ -23,7 +24,7 @@ interface PackGanador { nombre: string; componentes: GanadorComponente[] }
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 
-type Modo = 'ganadores' | 'todos' | 'nuevo'
+type Modo = 'ganadores' | 'todos' | 'nuevo' | 'guardados'
 
 export default function Packs() {
   const { data, marcaActual } = useData()
@@ -75,6 +76,10 @@ export default function Packs() {
 
   useEffect(() => { setOverrideCategoria(null) }, [selIdx])
 
+  const [guardados, setGuardados] = useState<PackGuardado[]>([])
+  const [msgImport, setMsgImport] = useState('')
+  useEffect(() => { setGuardados(cargarPacks()) }, [])
+
   useEffect(() => {
     const skusUnicos = new Set(itemsNuevo.map(i => i.sku))
     setCategoriaNuevo(skusUnicos.size <= 1 ? 'pack' : 'kit')
@@ -117,6 +122,40 @@ export default function Packs() {
     return sum + (cat ? (cat.costo + extra) * it.qty : 0)
   }, 0)
 
+  const guardadosMarca = guardados.filter(g => g.marca === marcaActual.id)
+
+  // Productos del armador en el formato que se guarda (con el costo aéreo de cada uno)
+  const itemsGuardables = itemsNuevo.flatMap(it => {
+    const cat = catalogoSuelto.find(c => c.sku === it.sku)
+    return cat ? [{ sku: it.sku, nombre: cat.nombre, qty: it.qty, costoUnit: cat.costo, extraAereo: costosAereo[it.sku] || 0 }] : []
+  })
+
+  // Cuánto costaría hoy un pack guardado, con los costos actuales del catálogo
+  const costoHoy = (g: PackGuardado) =>
+    g.items.reduce((s, it) => {
+      const c = catalogo.find(x => x.sku === it.sku)
+      return s + ((c ? c.costo : it.costoUnit) + it.extraAereo) * it.qty
+    }, 0) + g.regalos.reduce((s, r) => s + r.costo, 0)
+
+  const onImportar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const n = await importarPacks(file)
+      setGuardados(cargarPacks())
+      setMsgImport(`Se importaron ${n} pack${n === 1 ? '' : 's'}.`)
+    } catch (err) {
+      setMsgImport('No pude leer ese archivo: ' + (err instanceof Error ? err.message : 'formato inválido'))
+    }
+    e.target.value = ''
+  }
+
+  const VISTA_TIERS = [
+    { key: 'tier1' as const, nombre: 'Oferta Fuerte (Tier 1)', caja: 'bg-red-50 border-red-200', texto: 'text-red-700' },
+    { key: 'tier2' as const, nombre: 'Oferta Media (Tier 2)', caja: 'bg-amber-50 border-amber-200', texto: 'text-amber-700' },
+    { key: 'tier3' as const, nombre: 'Precio Normal (Tier 3)', caja: 'bg-green-50 border-green-200', texto: 'text-green-700' },
+  ]
+
   return (
     <div>
       <div className="mb-5">
@@ -128,7 +167,7 @@ export default function Packs() {
       </div>
 
       {/* Selector de modo */}
-      <div className="flex bg-gray-100 rounded-xl p-1 mb-5 max-w-xl">
+      <div className="flex bg-gray-100 rounded-xl p-1 mb-5 max-w-3xl">
         <button
           onClick={() => setModo('ganadores')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors ${modo === 'ganadores' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
@@ -146,6 +185,12 @@ export default function Packs() {
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors ${modo === 'nuevo' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
         >
           <Wrench size={14} /> Armar nuevo
+        </button>
+        <button
+          onClick={() => setModo('guardados')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors ${modo === 'guardados' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+        >
+          <Bookmark size={14} /> Guardados{guardadosMarca.length > 0 ? ` (${guardadosMarca.length})` : ''}
         </button>
       </div>
 
@@ -510,7 +555,7 @@ export default function Packs() {
 
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">
-              2. Ponle un nombre <span className="font-normal text-gray-400">(opcional, solo para identificarlo)</span>
+              2. Ponle un nombre <span className="font-normal text-gray-400">(lo necesitas para guardarlo)</span>
             </label>
             <input
               value={nombreNuevo}
@@ -529,9 +574,144 @@ export default function Packs() {
                   {' '}· Es un <strong>{categoriaNuevo === 'pack' ? 'pack de unidades iguales' : 'combo de productos distintos'}</strong>
                 </span>
               </div>
-              <TierScenarios costo={costoNuevo} categoria={categoriaNuevo} onCategoriaChange={setCategoriaNuevo} showCategoriaToggle />
+              <TierScenarios
+                costo={costoNuevo}
+                categoria={categoriaNuevo}
+                onCategoriaChange={setCategoriaNuevo}
+                showCategoriaToggle
+                guardar={{ nombre: nombreNuevo, items: itemsGuardables, onGuardado: () => setGuardados(cargarPacks()) }}
+              />
             </>
           )}
+        </div>
+      )}
+
+      {/* ===== GUARDADOS ===== */}
+      {modo === 'guardados' && (
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <p className="text-sm text-gray-600">
+              {guardadosMarca.length === 0
+                ? `Todavía no hay packs guardados de ${marcaActual.nombre}`
+                : `${guardadosMarca.length} pack${guardadosMarca.length === 1 ? '' : 's'} guardado${guardadosMarca.length === 1 ? '' : 's'} de ${marcaActual.nombre}`}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportarPacks}
+                disabled={guardados.length === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40"
+              >
+                <Download size={13} /> Exportar
+              </button>
+              <label className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <Upload size={13} /> Importar
+                <input type="file" accept=".json,application/json" className="hidden" onChange={onImportar} />
+              </label>
+            </div>
+          </div>
+          {msgImport && <p className="text-xs text-gray-500 mb-3">{msgImport}</p>}
+
+          {guardadosMarca.length === 0 && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+              <Bookmark className="text-gray-300 mx-auto mb-3" size={32} />
+              <p className="font-medium text-gray-700 mb-1">Aquí aparecen los packs que guardes</p>
+              <p className="text-sm text-gray-400">Arma uno en «Armar nuevo» y usa «Guardar este pack» al final de la página.</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {guardadosMarca.map(g => {
+              const ahora = costoHoy(g)
+              const cambio = g.costoTotal > 0 && Math.abs(ahora - g.costoTotal) / g.costoTotal >= 0.01
+              return (
+                <div key={g.id} className="bg-white border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div>
+                      <p className="text-base font-semibold text-gray-900">{g.nombre}</p>
+                      <p className="text-xs text-gray-400">
+                        {g.categoria === 'pack' ? 'Pack de unidades iguales' : 'Combo de productos distintos'} · guardado el {new Date(g.actualizado).toLocaleDateString('es-CL')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => { if (confirm(`¿Eliminar "${g.nombre}"?`)) { eliminarPack(g.id); setGuardados(cargarPacks()) } }}
+                      className="text-gray-300 hover:text-red-500"
+                      title="Eliminar"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="border border-gray-100 rounded-xl divide-y divide-gray-100 mb-3">
+                    {g.items.map(it => (
+                      <div key={it.sku} className="flex items-center justify-between px-3 py-2 text-sm">
+                        <span className="text-gray-800">
+                          {it.qty > 1 ? `${it.qty}× ` : ''}{it.nombre}
+                          {it.extraAereo > 0 && (
+                            <span className="ml-2 text-[11px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">+{fmt(it.extraAereo)} aéreo</span>
+                          )}
+                        </span>
+                        <span className="text-gray-500">{fmt((it.costoUnit + it.extraAereo) * it.qty)}</span>
+                      </div>
+                    ))}
+                    {g.regalos.map(r => (
+                      <div key={r.sku} className="flex items-center justify-between px-3 py-2 text-sm">
+                        <span className="text-gray-800">
+                          <span className="inline-flex items-center gap-1 text-[11px] bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded-full font-medium mr-2">
+                            <Gift size={10} /> Regalo
+                          </span>
+                          {r.nombre}
+                        </span>
+                        <span className="text-gray-500">{fmt(r.costo)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 mb-3">
+                    <span className="text-sm text-gray-600">Costo total{g.regalos.length > 0 ? ' (con regalos)' : ''}</span>
+                    <span className="text-base font-semibold text-gray-900">{fmt(g.costoTotal)}</span>
+                  </div>
+
+                  {cambio && (
+                    <div className="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2 mb-3">
+                      Los costos cambiaron desde que lo guardaste: hoy costaría {fmt(ahora)}. Los precios de abajo son los que guardaste.
+                    </div>
+                  )}
+
+                  {g.precios && (
+                    <div className="grid grid-cols-3 gap-3">
+                      {VISTA_TIERS.map(t => {
+                        const precio = g.precios![t.key]
+                        return (
+                          <div key={t.key} className={`border-2 rounded-xl p-3 ${t.caja}`}>
+                            <p className={`text-xs font-semibold ${t.texto}`}>{t.nombre}</p>
+                            <p className="text-xl font-bold text-gray-900">{fmt(precio)}</p>
+                            <p className="text-xs text-gray-500">Ganas {margenPorPrecio(g.costoTotal, precio).toFixed(0)}%</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                  {g.precioUnico && (
+                    <div className="flex items-center justify-between border-2 border-emerald-200 bg-emerald-50 rounded-xl p-4">
+                      <div>
+                        <p className="text-xs text-emerald-700">{g.precioUnico.etiqueta}</p>
+                        <p className="text-2xl font-bold text-gray-900">{fmt(g.precioUnico.valor)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">Ganas</p>
+                        <p className="text-xl font-bold text-emerald-700">{margenPorPrecio(g.costoTotal, g.precioUnico.valor).toFixed(0)}%</p>
+                        <p className="text-xs text-gray-500">= {fmt(Math.round(g.precioUnico.valor / 1.19) - g.costoTotal)} c/u</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          <p className="text-xs text-gray-400 mt-4">
+            Los packs guardados quedan en este navegador. Para pasarlos a otra persona o computador, usa Exportar y luego Importar.
+          </p>
         </div>
       )}
 
