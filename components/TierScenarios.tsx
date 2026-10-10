@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { calcularEscenarios, margenPorPrecio, roundChilean, type Categoria } from '@/lib/pricing-tiers'
 import { useData } from '@/lib/context'
-import { Flame, Star, Leaf, Gift, Boxes, Plus, X } from 'lucide-react'
+import { Flame, Star, Leaf, Gift, Boxes, Plus, X, Search } from 'lucide-react'
+import { filtrarPorTexto } from '@/lib/search'
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 
@@ -33,6 +34,7 @@ export default function TierScenarios({
   const [catalogo, setCatalogo] = useState<CatalogItem[]>([])
   const [regalos, setRegalos] = useState<RegaloAgregado[]>([])
   const [mostrarSelector, setMostrarSelector] = useState(false)
+  const [busquedaRegalo, setBusquedaRegalo] = useState('')
 
   useEffect(() => {
     fetch(marcaActual.componentesFile)
@@ -59,6 +61,7 @@ export default function TierScenarios({
     if (regalos.find(r => r.sku === item.sku)) return
     setRegalos([...regalos, { sku: item.sku, nombre: item.nombre, costo: item.costo }])
     setMostrarSelector(false)
+    setBusquedaRegalo('')
   }
   const quitarRegalo = (sku: string) => setRegalos(regalos.filter(r => r.sku !== sku))
   const actualizarCostoRegalo = (sku: string, nuevoCosto: number) =>
@@ -121,11 +124,25 @@ export default function TierScenarios({
         </p>
 
         {mostrarSelector && (
-          <div className="border border-pink-200 bg-white rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100 mb-2">
+          <div className="mb-2">
+            <div className="relative mb-1.5">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                value={busquedaRegalo}
+                onChange={e => setBusquedaRegalo(e.target.value)}
+                placeholder="Buscar producto"
+                autoFocus
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-pink-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
+              />
+            </div>
+          <div className="border border-pink-200 bg-white rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
             {catalogo.length === 0 && (
               <p className="text-xs text-gray-400 p-3 text-center">No hay productos en el catálogo todavía</p>
             )}
-            {catalogo.map(item => (
+            {catalogo.length > 0 && filtrarPorTexto(catalogo, busquedaRegalo).length === 0 && (
+              <p className="text-xs text-gray-400 p-3 text-center">No hay productos que calcen con esa búsqueda</p>
+            )}
+            {filtrarPorTexto(catalogo, busquedaRegalo).map(item => (
               <button
                 key={item.sku}
                 onClick={() => agregarRegalo(item)}
@@ -136,6 +153,7 @@ export default function TierScenarios({
                 <span className="text-gray-400 flex-shrink-0 ml-2">{fmt(item.costo)}</span>
               </button>
             ))}
+          </div>
           </div>
         )}
 

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useData } from '@/lib/context'
 import { detectarCategoria, type Categoria } from '@/lib/pricing-tiers'
 import TierScenarios from '@/components/TierScenarios'
-import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane } from 'lucide-react'
+import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane, Search } from 'lucide-react'
+import { filtrarPorTexto } from '@/lib/search'
 
 interface Componente { sku: string; nombre: string; qty: number; costo_unit: number }
 interface PackData {
@@ -47,6 +48,7 @@ export default function Packs() {
 
   // Armador nuevo
   const [nombreNuevo, setNombreNuevo] = useState('')
+  const [busqueda, setBusqueda] = useState('')
   const [itemsNuevo, setItemsNuevo] = useState<{ sku: string; qty: number }[]>([])
   const [categoriaNuevo, setCategoriaNuevo] = useState<Categoria>('kit')
 
@@ -99,6 +101,7 @@ export default function Packs() {
 
   // Solo ítems sueltos en el armador — sin kits/packs ya armados
   const catalogoSuelto = catalogo.filter(c => c.tipo !== 'PACKS MY COCOS')
+  const catalogoFiltrado = filtrarPorTexto(catalogoSuelto, busqueda)
 
   // Builder helpers
   const agregarItem = (sku: string) => {
@@ -392,15 +395,34 @@ export default function Packs() {
           <input
             value={nombreNuevo}
             onChange={e => setNombreNuevo(e.target.value)}
-            placeholder="Nombre del pack (ej: Kit Verano Rasuradora + Nasal)"
+            placeholder="Nombre del pack (opcional, solo para identificarlo)"
             className="w-full mb-4 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <p className="text-xs text-gray-500 mb-2">Ítems sueltos ({catalogoSuelto.length})</p>
+              <p className="text-xs text-gray-500 mb-2">
+                Ítems sueltos ({busqueda.trim() ? `${catalogoFiltrado.length} de ${catalogoSuelto.length}` : catalogoSuelto.length})
+              </p>
+              <div className="relative mb-2">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                  placeholder="Buscar producto (ej: rasuradora 4.0 + daily shaver)"
+                  className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                />
+                {busqueda && (
+                  <button onClick={() => setBusqueda('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500" title="Borrar búsqueda">
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
               <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto divide-y divide-gray-100">
-                {catalogoSuelto.map(c => (
+                {catalogoFiltrado.length === 0 && (
+                  <p className="text-xs text-gray-400 p-4 text-center">No hay productos que calcen con esa búsqueda</p>
+                )}
+                {catalogoFiltrado.map(c => (
                   <button
                     key={c.sku}
                     onClick={() => agregarItem(c.sku)}
