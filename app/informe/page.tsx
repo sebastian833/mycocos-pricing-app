@@ -9,7 +9,7 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, BarElement, BarController, LineController, Title, Tooltip, Legend, Filler
 } from 'chart.js'
-import type { ProductData } from '@/types'
+import type { ProductData, ProductMonth } from '@/types'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, BarController, LineController, Title, Tooltip, Legend, Filler)
 
@@ -17,9 +17,15 @@ const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov'
 const TEMP  = ['Año nuevo','Verano','Vuelta clases','Otoño','Día Mamá','CyberDay','Invierno','Invierno','Fiestas Patrias','Pre HotSale','HotSale','Navidad/CyberMonday']
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
+// Montos grandes en millones ($161,5 M); los chicos completos
+function fmtPlata(n: number) {
+  return Math.abs(n) >= 1e6
+    ? '$' + (n / 1e6).toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' M'
+    : fmt(n)
+}
 
 export default function Informe() {
-  const { data } = useData()
+  const { data, marcaActual } = useData()
   const router = useRouter()
   const [selected, setSelected] = useState(0)
 
@@ -42,6 +48,13 @@ export default function Informe() {
 
   const latest = data.años[data.años.length - 1]
   const prev   = latest - 1
+
+  // Margen en plata: lo que realmente dejó cada mes (suma de las ventas), no solo el porcentaje
+  const margenMes = (m: ProductMonth) => m.m25 ?? Math.round((m.pn25 - m.c25) * m.q25)
+  const totUnid = meses.reduce((s, m) => s + m.q25, 0)
+  const totMargen = meses.reduce((s, m) => s + margenMes(m), 0)
+  const totMargenPrev = meses.reduce((s, m) => s + (m.m24 ?? 0), 0)
+  const mesTopMargen = meses.reduce((a, b) => margenMes(a) >= margenMes(b) ? a : b, meses[0])
 
   const chartData = {
     labels: MESES,
@@ -139,12 +152,14 @@ export default function Informe() {
       </select>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-5">
         {[
           { label: 'Precio máximo', value: fmt(maxPb), sub: MESES[meses.findIndex(m => m.pb25 === maxPb)] },
           { label: 'Precio mínimo', value: fmt(minPb), sub: MESES[meses.findIndex(m => m.pb25 === minPb)] },
           { label: 'Spread anual', value: spread + '%', sub: 'máx vs mín' },
           { label: 'Mes top volumen', value: MESES[meses.indexOf(maxQ)], sub: maxQ.q25.toLocaleString() + ' unidades' },
+          { label: `Margen total ${latest}`, value: fmtPlata(totMargen), sub: totUnid > 0 ? `${totUnid.toLocaleString()} un. · ${fmt(totMargen / totUnid)} por unidad` : 'sin ventas' },
+          { label: 'Mes que más margen dejó', value: totMargen > 0 ? MESES[mesTopMargen.mes - 1] : '—', sub: totMargen > 0 ? fmtPlata(margenMes(mesTopMargen)) : '' },
         ].map(c => (
           <div key={c.label} className="bg-white border border-gray-200 rounded-xl p-4">
             <p className="text-xs text-gray-500 mb-1">{c.label}</p>
@@ -185,7 +200,7 @@ export default function Informe() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Mes','Temporada','Precio bruto','Precio lista','Dcto %','Margen %',`Unid. ${latest}`,`P. bruto ${prev}`,'Δ vs ant.'].map(h => (
+                {['Mes','Temporada','Precio bruto','Precio lista','Dcto %','Margen %','Margen por un.',`Unid. ${latest}`,`Margen total ${latest}`,`P. bruto ${prev}`,`Margen total ${prev}`,'Δ vs ant.'].map(h => (
                   <th key={h} className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -200,17 +215,24 @@ export default function Informe() {
                     <td className="px-3 py-2.5 font-medium text-gray-900">{MESES[i]}</td>
                     <td className="px-3 py-2.5 text-gray-500 text-xs whitespace-nowrap">{TEMP[i]}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
-                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${isMax ? 'bg-green-100 text-green-800' : isMin ? 'bg-red-100 text-red-800' : 'text-gray-900'}`}>
-                        {fmt(m.pb25)}
-                      </span>
+                      {m.q25 > 0 ? (
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${isMax ? 'bg-green-100 text-green-800' : isMin ? 'bg-red-100 text-red-800' : 'text-gray-900'}`}>
+                          {fmt(m.pb25)}
+                        </span>
+                      ) : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-3 py-2.5 text-gray-500 text-xs">{fmt(m.pl25)}</td>
-                    <td className="px-3 py-2.5 text-gray-500 text-xs">{m.d25.toFixed(1)}%</td>
+                    <td className="px-3 py-2.5 text-gray-500 text-xs">{m.q25 > 0 ? fmt(m.pl25) : <span className="text-gray-300">—</span>}</td>
+                    <td className="px-3 py-2.5 text-gray-500 text-xs">{m.q25 > 0 ? m.d25.toFixed(1) + '%' : <span className="text-gray-300">—</span>}</td>
                     <td className="px-3 py-2.5 text-xs font-medium" style={{ color: m.mg25 >= 50 ? '#3B6D11' : m.mg25 >= 30 ? '#854F0B' : '#A32D2D' }}>
-                      {m.mg25.toFixed(1)}%
+                      {m.q25 > 0 ? m.mg25.toFixed(1) + '%' : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: m.mg25 >= 50 ? '#3B6D11' : m.mg25 >= 30 ? '#854F0B' : '#A32D2D' }}>
+                      {m.q25 > 0 && m.pn25 > 0 ? fmt(m.pn25 - m.c25) : '—'}
                     </td>
                     <td className="px-3 py-2.5 text-gray-700 text-xs">{m.q25.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-xs font-medium text-gray-900 whitespace-nowrap">{m.q25 > 0 ? fmtPlata(margenMes(m)) : '—'}</td>
                     <td className="px-3 py-2.5 text-gray-400 text-xs">{m.pb24 ? fmt(m.pb24) : '—'}</td>
+                    <td className="px-3 py-2.5 text-gray-400 text-xs whitespace-nowrap">{m.m24 ? fmtPlata(m.m24) : '—'}</td>
                     <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap">
                       {delta !== null
                         ? <span style={{ color: delta >= 0 ? '#3B6D11' : '#A32D2D' }}>
@@ -222,10 +244,25 @@ export default function Informe() {
                   </tr>
                 )
               })}
+              <tr className="bg-gray-50 border-t-2 border-gray-200 font-semibold">
+                <td className="px-3 py-2.5 text-gray-900">Total</td>
+                <td className="px-3 py-2.5" colSpan={5}></td>
+                <td className="px-3 py-2.5 text-xs text-gray-700">{totUnid > 0 ? fmt(totMargen / totUnid) + ' prom.' : '—'}</td>
+                <td className="px-3 py-2.5 text-xs text-gray-900">{totUnid.toLocaleString()}</td>
+                <td className="px-3 py-2.5 text-xs text-gray-900 whitespace-nowrap">{fmtPlata(totMargen)}</td>
+                <td className="px-3 py-2.5"></td>
+                <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{totMargenPrev ? fmtPlata(totMargenPrev) : '—'}</td>
+                <td className="px-3 py-2.5"></td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      <p className="text-xs text-gray-400 mt-3">
+        El margen total suma lo que dejó cada venta del mes. El margen por unidad usa el precio y el costo típicos del mes, por eso puede no multiplicar exacto con las unidades.
+        {marcaActual.id === 'myhuevos' && ' En MyHUEVOS Colombia el reporte de ventas no trae costo: se usa el costo actual de la maestra en todos los meses.'}
+      </p>
     </div>
   )
 }

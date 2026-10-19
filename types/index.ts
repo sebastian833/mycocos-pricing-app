@@ -9,6 +9,8 @@ export interface ProductMonth {
   mg25: number
   pb24?: number
   q24?: number
+  m25?: number   // margen total en plata del mes (año actual)
+  m24?: number   // margen total en plata del mes (año anterior)
 }
 
 export interface ProductData {

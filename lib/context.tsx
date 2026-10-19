@@ -42,14 +42,14 @@ function buildContext(d: ParsedData, nombreMarca: string, pais: string): string 
   const fmtM = (n: number) => `$${(n / 1e6).toFixed(1)}M ${moneda.code}`
   let ctx = `CONTEXTO DE VENTAS ${nombreMarca.toUpperCase()} (${pais}) — moneda: ${moneda.code}\n\n`
   d.resumen.forEach(r => {
-    ctx += `RESUMEN ${r.año}:\n- Ventas brutas: ${fmtM(r.ventas_brutas)}\n- Unidades: ${r.unidades.toLocaleString()}\n- Margen total: ${fmtM(r.margen_total)}\n- SKUs: ${r.num_skus}\n\n`
+    ctx += `RESUMEN ${r.año}:\n- Ventas brutas: ${fmtM(r.ventas_brutas)}\n- Unidades: ${r.unidades.toLocaleString()}\n${r.margen_total > 0 ? `- Margen total: ${fmtM(r.margen_total)}\n` : ''}- SKUs: ${r.num_skus}\n\n`
   })
   ctx += `TOP PRODUCTOS:\n\n`
   d.productos.slice(0, 15).forEach(p => {
     ctx += `Producto: ${p.nombre}\n  Tipo: ${p.tipo} | Costo: ${fmt(p.costo_avg)} | Margen: ${p.margen_avg}% | Vol: ${p.volumen_total.toLocaleString()} un.\n`
     p.meses.forEach(m => {
       if (m.q25 > 0) {
-        ctx += `  ${MESES[m.mes-1]} (${TEMP[m.mes-1]}): bruto ${fmt(m.pb25)}, lista ${fmt(m.pl25)}, dcto ${m.d25}%, margen ${m.mg25}%, vol ${m.q25} un.\n`
+        ctx += `  ${MESES[m.mes-1]} (${TEMP[m.mes-1]}): bruto ${fmt(m.pb25)}, lista ${fmt(m.pl25)}, dcto ${m.d25}%, margen ${m.mg25}%${m.m25 ? ` (${fmt(m.m25)} en total)` : ''}, vol ${m.q25} un.\n`
       }
     })
     ctx += '\n'

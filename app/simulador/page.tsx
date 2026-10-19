@@ -264,7 +264,7 @@ export default function Simulador() {
 
       {/* Comparación vs histórico */}
       <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700">
-        <strong>Dato de referencia:</strong> normalmente este producto se vende a {fmt(prod.precio_bruto_avg)} y se gana {prod.margen_avg}%.
+        <strong>Dato de referencia:</strong> normalmente este producto se vende a {fmt(prod.precio_bruto_avg)} y se gana {prod.margen_avg}% ({fmt(Math.round(prod.precio_bruto_avg / IVA) - prod.costo_avg)} por unidad).
         {' '}Tu cálculo está {diffPct >= 0 ? <span className="text-green-700 font-medium">+{diffPct.toFixed(1)}% más caro</span> : <span className="text-red-700 font-medium">{diffPct.toFixed(1)}% más barato</span>} que lo normal.
       </div>
     </div>

@@ -111,6 +111,9 @@ export default function Home() {
                 <p className="text-xs text-gray-500 mb-1">{r.año}</p>
                 <p className="text-xl font-semibold text-gray-900">${(r.ventas_brutas / 1e6).toFixed(1)}M</p>
                 <p className="text-xs text-gray-400">{r.unidades.toLocaleString()} unidades</p>
+                {r.margen_total > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">Margen total <span className="font-semibold text-gray-700">${(r.margen_total / 1e6).toFixed(1)}M</span></p>
+                )}
               </div>
             ))}
           </div>

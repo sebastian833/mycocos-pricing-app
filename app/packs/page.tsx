@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useData } from '@/lib/context'
-import { detectarCategoria, margenPorPrecio, type Categoria } from '@/lib/pricing-tiers'
+import { detectarCategoria, margenPorPrecio, gananciaPorPrecio, type Categoria } from '@/lib/pricing-tiers'
 import TierScenarios from '@/components/TierScenarios'
 import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane, Search, Bookmark, Download, Upload, Trash2, ClipboardCheck } from 'lucide-react'
 import { filtrarPorTexto } from '@/lib/search'
@@ -707,19 +707,20 @@ export default function Packs() {
                       <p className={`text-xs font-medium ${mgSu >= v.meta ? 'text-green-700' : 'text-red-600'}`}>
                         Ganas {mgSu.toFixed(1)}% · {mgSu >= v.meta ? 'cumple' : `${(v.meta - mgSu).toFixed(1)} pts bajo`} la meta de {v.meta}%
                       </p>
+                      <p className="text-[11px] text-gray-500">= {fmt(gananciaPorPrecio(v.costo, p.precioTier2))} de ganancia por pack</p>
                       {dtoComp > 0 && <p className="text-[11px] text-gray-400 mt-0.5">{dtoComp}% bajo su precio de comparación ({fmt(p.precioComparacion)})</p>}
                     </div>
                     <div className="border border-gray-200 rounded-xl p-3">
                       <p className="text-xs text-gray-500">Mínimo por regla ({v.meta}%)</p>
                       <p className="text-xl font-bold text-gray-900">{fmt(v.pisoPrecio)}</p>
-                      <p className="text-xs text-gray-500">Ganas {mgPiso.toFixed(1)}%</p>
+                      <p className="text-xs text-gray-500">Ganas {mgPiso.toFixed(1)}% · {fmt(gananciaPorPrecio(v.costo, v.pisoPrecio))} por pack</p>
                       <p className="text-[11px] text-gray-400 mt-0.5">Precio normal (EVG) de ellos: {fmt(p.precioEvg)}</p>
                     </div>
                     {p.estado !== 'no' && (
                     <div className={`border-2 rounded-xl p-3 ${e.borde} bg-gray-50`}>
                       <p className="text-xs text-gray-600 font-medium">Recomendado</p>
                       <p className="text-xl font-bold text-gray-900">{fmt(p.recomendado.precio)}</p>
-                      <p className={`text-xs font-medium ${mgRec >= v.meta ? 'text-green-700' : 'text-red-600'}`}>Ganas {mgRec.toFixed(1)}%</p>
+                      <p className={`text-xs font-medium ${mgRec >= v.meta ? 'text-green-700' : 'text-red-600'}`}>Ganas {mgRec.toFixed(1)}% · {fmt(gananciaPorPrecio(v.costo, p.recomendado.precio))} por pack</p>
                       <p className="text-[11px] text-gray-500 mt-0.5">{p.recomendado.nota}</p>
                     </div>
                     )}
@@ -745,7 +746,7 @@ export default function Packs() {
                     <div className="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
                       <p className="text-xs font-semibold text-indigo-800">{p.alternativa.titulo}</p>
                       <p className="text-xs text-indigo-700">
-                        Costo {fmt(v.costoAlt)} · a {fmt(p.alternativa.precio)} ganas {margenPorPrecio(v.costoAlt, p.alternativa.precio).toFixed(1)}%. {p.alternativa.nota}
+                        Costo {fmt(v.costoAlt)} · a {fmt(p.alternativa.precio)} ganas {margenPorPrecio(v.costoAlt, p.alternativa.precio).toFixed(1)}% ({fmt(gananciaPorPrecio(v.costoAlt, p.alternativa.precio))} por pack). {p.alternativa.nota}
                       </p>
                     </div>
                   )}
@@ -859,7 +860,7 @@ export default function Packs() {
                           <div key={t.key} className={`border-2 rounded-xl p-3 ${t.caja}`}>
                             <p className={`text-xs font-semibold ${t.texto}`}>{t.nombre}</p>
                             <p className="text-xl font-bold text-gray-900">{fmt(precio)}</p>
-                            <p className="text-xs text-gray-500">Ganas {margenPorPrecio(g.costoTotal, precio).toFixed(0)}%</p>
+                            <p className="text-xs text-gray-500">Ganas {margenPorPrecio(g.costoTotal, precio).toFixed(0)}% · {fmt(gananciaPorPrecio(g.costoTotal, precio))}</p>
                           </div>
                         )
                       })}
