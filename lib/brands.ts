@@ -10,6 +10,7 @@ export interface Brand {
   packsFile: string
   packsGanadoresFile: string
   componentesFile: string
+  propuestasFile?: string   // packs propuestos para aprobación (opcional)
 }
 
 export const BRANDS: Brand[] = [
@@ -23,6 +24,7 @@ export const BRANDS: Brand[] = [
     packsFile: '/packs-mycocos.json',
     packsGanadoresFile: '/packs-ganadores-mycocos.json',
     componentesFile: '/componentes-mycocos.json',
+    propuestasFile: '/propuestas-mycocos.json',
   },
   {
     id: 'myhuevos',

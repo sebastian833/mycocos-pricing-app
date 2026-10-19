@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useData } from '@/lib/context'
 import { detectarCategoria, margenPorPrecio, type Categoria } from '@/lib/pricing-tiers'
 import TierScenarios from '@/components/TierScenarios'
-import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane, Search, Bookmark, Download, Upload, Trash2 } from 'lucide-react'
+import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane, Search, Bookmark, Download, Upload, Trash2, ClipboardCheck } from 'lucide-react'
 import { filtrarPorTexto } from '@/lib/search'
 import { cargarPacks, eliminarPack, exportarPacks, importarPacks, type PackGuardado } from '@/lib/saved-packs'
 
@@ -24,7 +24,37 @@ interface PackGanador { nombre: string; componentes: GanadorComponente[] }
 
 function fmt(n: number) { return '$' + Math.round(n).toLocaleString('es-CL') }
 
-type Modo = 'ganadores' | 'todos' | 'nuevo' | 'guardados'
+type Modo = 'ganadores' | 'todos' | 'nuevo' | 'guardados' | 'aprobar'
+
+interface PropuestaItem { sku: string; nombre: string; qty: number; costo: number; lista: number; stock: number }
+interface Propuesta {
+  id: string
+  orden: number
+  nombre: string
+  estado: 'aprobar' | 'ajustar' | 'no'
+  items: PropuestaItem[]
+  precioTier2: number
+  precioEvg: number
+  precioComparacion: number
+  recomendado: { precio: number; nota: string }
+  alternativa: { titulo: string; quitar: string[]; precio: number; nota: string } | null
+  evidencia: string[]
+  riesgos: string[]
+}
+interface PropuestasData {
+  evento: string
+  preparado: string
+  fuente: string
+  metaMargen: number
+  contexto: string[]
+  propuestas: Propuesta[]
+}
+
+const ESTADO_VISTA = {
+  aprobar: { texto: 'Recomendado: aprobar', chip: 'bg-green-100 text-green-800', borde: 'border-green-200' },
+  ajustar: { texto: 'Aprobar con ajuste de precio', chip: 'bg-amber-100 text-amber-800', borde: 'border-amber-200' },
+  no: { texto: 'No aprobar como está', chip: 'bg-red-100 text-red-800', borde: 'border-red-200' },
+} as const
 
 export default function Packs() {
   const { data, marcaActual } = useData()
@@ -46,6 +76,7 @@ export default function Packs() {
   // Catálogo (para armador)
   const [catalogo, setCatalogo] = useState<CatalogItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [propuestas, setPropuestas] = useState<PropuestasData | null>(null)
 
   // Armador nuevo
   const [nombreNuevo, setNombreNuevo] = useState('')
@@ -61,13 +92,17 @@ export default function Packs() {
       fetch(marcaActual.packsFile).then(r => r.json()).catch(() => []),
       fetch(marcaActual.componentesFile).then(r => r.json()).catch(() => []),
       fetch(marcaActual.packsGanadoresFile).then(r => r.json()).catch(() => []),
-    ]).then(([packsJson, catJson, ganadoresJson]: [PackData[], CatalogItem[], PackGanador[]]) => {
+      marcaActual.propuestasFile
+        ? fetch(marcaActual.propuestasFile).then(r => r.json()).catch(() => null)
+        : Promise.resolve(null),
+    ]).then(([packsJson, catJson, ganadoresJson, propuestasJson]: [PackData[], CatalogItem[], PackGanador[], PropuestasData | null]) => {
       const vendidos = packsJson
         .filter(p => p.precio_venta && p.costo_real_bom > 0)
         .sort((a, b) => (b.precio_venta || 0) - (a.precio_venta || 0))
       setPacks(vendidos)
       setCatalogo(catJson)
       setGanadores(ganadoresJson)
+      setPropuestas(propuestasJson && propuestasJson.propuestas?.length ? propuestasJson : null)
       setSelGanador(0)
       setSelIdx(0)
       setLoading(false)
@@ -79,6 +114,8 @@ export default function Packs() {
   const [guardados, setGuardados] = useState<PackGuardado[]>([])
   const [msgImport, setMsgImport] = useState('')
   useEffect(() => { setGuardados(cargarPacks()) }, [])
+  // si se cambia a una marca sin propuestas estando en esa pestaña, vuelve a la primera
+  useEffect(() => { if (modo === 'aprobar' && !loading && !propuestas) setModo('ganadores') }, [modo, loading, propuestas])
 
   useEffect(() => {
     const skusUnicos = new Set(itemsNuevo.map(i => i.sku))
@@ -124,6 +161,24 @@ export default function Packs() {
 
   const guardadosMarca = guardados.filter(g => g.marca === marcaActual.id)
 
+  // Números de cada propuesta (costo, márgenes, precio mínimo por regla, stock)
+  const vistaPropuesta = (p: Propuesta) => {
+    const meta = propuestas?.metaMargen ?? 65
+    const costo = p.items.reduce((s, it) => s + it.costo * it.qty, 0)
+    const pisoExacto = costo / (1 - meta / 100) * 1.19
+    const pisoPrecio = Math.ceil((pisoExacto + 10) / 1000) * 1000 - 10   // sube al siguiente ...990 para no quedar bajo la meta
+    const stockPacks = Math.min(...p.items.map(it => Math.floor(it.stock / it.qty)))
+    const limita = p.items.reduce((a, b) => Math.floor(a.stock / a.qty) <= Math.floor(b.stock / b.qty) ? a : b)
+    const costoAlt = p.alternativa
+      ? p.items.filter(it => !p.alternativa!.quitar.includes(it.sku)).reduce((s, it) => s + it.costo * it.qty, 0)
+      : 0
+    return { meta, costo, pisoPrecio, stockPacks, limita, costoAlt }
+  }
+  const ordenEstado = { aprobar: 0, ajustar: 1, no: 2 } as const
+  const propuestasOrdenadas = propuestas
+    ? [...propuestas.propuestas].sort((a, b) => ordenEstado[a.estado] - ordenEstado[b.estado] || a.orden - b.orden)
+    : []
+
   // Productos del armador en el formato que se guarda (con el costo aéreo de cada uno)
   const itemsGuardables = itemsNuevo.flatMap(it => {
     const cat = catalogoSuelto.find(c => c.sku === it.sku)
@@ -167,31 +222,39 @@ export default function Packs() {
       </div>
 
       {/* Selector de modo */}
-      <div className="flex bg-gray-100 rounded-xl p-1 mb-5 max-w-3xl">
+      <div className="flex bg-gray-100 rounded-xl p-1 mb-5 max-w-4xl overflow-x-auto">
         <button
           onClick={() => setModo('ganadores')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors ${modo === 'ganadores' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 whitespace-nowrap rounded-lg text-sm font-medium transition-colors ${modo === 'ganadores' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
         >
           <Trophy size={14} /> Los que más venden
         </button>
         <button
           onClick={() => setModo('todos')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors ${modo === 'todos' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 whitespace-nowrap rounded-lg text-sm font-medium transition-colors ${modo === 'todos' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
         >
           <List size={14} /> Todos los packs
         </button>
         <button
           onClick={() => setModo('nuevo')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors ${modo === 'nuevo' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 whitespace-nowrap rounded-lg text-sm font-medium transition-colors ${modo === 'nuevo' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
         >
           <Wrench size={14} /> Armar nuevo
         </button>
         <button
           onClick={() => setModo('guardados')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors ${modo === 'guardados' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 whitespace-nowrap rounded-lg text-sm font-medium transition-colors ${modo === 'guardados' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
         >
           <Bookmark size={14} /> Guardados{guardadosMarca.length > 0 ? ` (${guardadosMarca.length})` : ''}
         </button>
+        {propuestas && (
+          <button
+            onClick={() => setModo('aprobar')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 whitespace-nowrap rounded-lg text-sm font-medium transition-colors ${modo === 'aprobar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          >
+            <ClipboardCheck size={14} /> Para aprobar ({propuestas.propuestas.length})
+          </button>
+        )}
       </div>
 
       {/* ===== GANADORES ===== */}
@@ -583,6 +646,117 @@ export default function Packs() {
               />
             </>
           )}
+        </div>
+      )}
+
+      {/* ===== PARA APROBAR ===== */}
+      {modo === 'aprobar' && propuestas && (
+        <div>
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-gray-900">{propuestas.evento}</h2>
+            <p className="text-xs text-gray-400">
+              Preparado el {new Date(propuestas.preparado + 'T12:00:00').toLocaleDateString('es-CL')} · Fuente: {propuestas.fuente} · Pendientes de aprobación
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {(['aprobar', 'ajustar', 'no'] as const).map(e => `${propuestas.propuestas.filter(p => p.estado === e).length} ${e === 'aprobar' ? 'recomendados' : e === 'ajustar' ? 'con ajuste' : 'no recomendados'}`).join(' · ')}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5 space-y-2">
+            <p className="text-xs font-semibold text-gray-700">Cómo leer esto</p>
+            {propuestas.contexto.map((t, i) => (
+              <p key={i} className="text-xs text-gray-600">{t}</p>
+            ))}
+          </div>
+
+          <div className="space-y-5">
+            {propuestasOrdenadas.map(p => {
+              const v = vistaPropuesta(p)
+              const e = ESTADO_VISTA[p.estado]
+              const mgSu = margenPorPrecio(v.costo, p.precioTier2)
+              const mgPiso = margenPorPrecio(v.costo, v.pisoPrecio)
+              const mgRec = margenPorPrecio(v.costo, p.recomendado.precio)
+              const dtoComp = p.precioComparacion > 0 ? Math.round((1 - p.precioTier2 / p.precioComparacion) * 100) : 0
+              return (
+                <div key={p.id} className={`bg-white border-2 rounded-2xl p-5 ${e.borde}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                    <div>
+                      <p className="text-base font-semibold text-gray-900">{p.nombre}</p>
+                      <p className="text-xs text-gray-400">Oferta #{p.orden} del armador</p>
+                    </div>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${e.chip}`}>{e.texto}</span>
+                  </div>
+
+                  <div className="border border-gray-100 rounded-xl divide-y divide-gray-100 mb-3">
+                    {p.items.map(it => (
+                      <div key={it.sku} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                        <span className="text-gray-800">{it.qty > 1 ? `${it.qty}× ` : ''}{it.nombre}</span>
+                        <span className="text-gray-500 whitespace-nowrap">{fmt(it.costo * it.qty)} <span className="text-gray-300">· stock {it.stock.toLocaleString('es-CL')}</span></span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between px-3 py-2 text-sm bg-gray-50">
+                      <span className="font-medium text-gray-700">Costo total</span>
+                      <span className="font-semibold text-gray-900">{fmt(v.costo)}</span>
+                    </div>
+                  </div>
+
+                  <div className={`grid grid-cols-1 gap-3 mb-3 ${p.estado === 'no' ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+                    <div className="border border-gray-200 rounded-xl p-3">
+                      <p className="text-xs text-gray-500">Su precio Tier 2</p>
+                      <p className="text-xl font-bold text-gray-900">{fmt(p.precioTier2)}</p>
+                      <p className={`text-xs font-medium ${mgSu >= v.meta ? 'text-green-700' : 'text-red-600'}`}>
+                        Ganas {mgSu.toFixed(1)}% · {mgSu >= v.meta ? 'cumple' : `${(v.meta - mgSu).toFixed(1)} pts bajo`} la meta de {v.meta}%
+                      </p>
+                      {dtoComp > 0 && <p className="text-[11px] text-gray-400 mt-0.5">{dtoComp}% bajo su precio de comparación ({fmt(p.precioComparacion)})</p>}
+                    </div>
+                    <div className="border border-gray-200 rounded-xl p-3">
+                      <p className="text-xs text-gray-500">Mínimo por regla ({v.meta}%)</p>
+                      <p className="text-xl font-bold text-gray-900">{fmt(v.pisoPrecio)}</p>
+                      <p className="text-xs text-gray-500">Ganas {mgPiso.toFixed(1)}%</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Precio normal (EVG) de ellos: {fmt(p.precioEvg)}</p>
+                    </div>
+                    {p.estado !== 'no' && (
+                    <div className={`border-2 rounded-xl p-3 ${e.borde} bg-gray-50`}>
+                      <p className="text-xs text-gray-600 font-medium">Recomendado</p>
+                      <p className="text-xl font-bold text-gray-900">{fmt(p.recomendado.precio)}</p>
+                      <p className={`text-xs font-medium ${mgRec >= v.meta ? 'text-green-700' : 'text-red-600'}`}>Ganas {mgRec.toFixed(1)}%</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">{p.recomendado.nota}</p>
+                    </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-gray-500 mb-3">
+                    Stock: alcanza para <strong>{v.stockPacks.toLocaleString('es-CL')}</strong> packs (limita: {v.limita.nombre}).
+                  </p>
+
+                  <p className="text-xs font-semibold text-gray-700 mb-1">Qué dice el histórico de ventas</p>
+                  <ul className="list-disc pl-5 space-y-1 mb-3">
+                    {p.evidencia.map((t, i) => <li key={i} className="text-xs text-gray-600">{t}</li>)}
+                  </ul>
+
+                  {p.riesgos.length > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                      <p className="text-xs font-semibold text-amber-800 mb-0.5">Riesgos</p>
+                      {p.riesgos.map((t, i) => <p key={i} className="text-xs text-amber-800">{t}</p>)}
+                    </div>
+                  )}
+
+                  {p.alternativa && (
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
+                      <p className="text-xs font-semibold text-indigo-800">{p.alternativa.titulo}</p>
+                      <p className="text-xs text-indigo-700">
+                        Costo {fmt(v.costoAlt)} · a {fmt(p.alternativa.precio)} ganas {margenPorPrecio(v.costoAlt, p.alternativa.precio).toFixed(1)}%. {p.alternativa.nota}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          <p className="text-xs text-gray-400 mt-4">
+            Las propuestas quedan para revisión del equipo directivo. La aprobación se responde por fuera de la app; esta pantalla no registra quién aprobó.
+          </p>
         </div>
       )}
 

@@ -1,0 +1,371 @@
+{
+ "evento": "Halloween · Oferta Hombre Lobo (Tier 2)",
+ "preparado": "2026-10-19",
+ "fuente": "Pestaña «Ofertas Hombre Lobo» del Armador de Packs MyCOCOS",
+ "metaMargen": 65,
+ "contexto": [
+  "Del 15 al 27 de octubre de 2024 y 2025 se vendió menos que un día normal (0,63x y 0,86x de los pedidos diarios típicos). Del 28 al 31 subió (1,65x y 1,08x). Las dos primeras semanas de octubre, con el Cyber, vendieron más de 3 veces un día normal.",
+  "El sistema solo registra «descuento manual» en octubre, sin promociones con nombre, así que no hay un efecto Halloween medido. La evaluación se basa en margen, precios históricos de productos equivalentes y stock.",
+  "Costos netos de la maestra. Margen = (precio sin IVA − costo) ÷ precio sin IVA. Meta de Tier 2 para combos de productos distintos: 65%. El stock viene del artefacto de ofertas, sin fecha indicada."
+ ],
+ "propuestas": [
+  {
+   "id": "lobo-4",
+   "orden": 4,
+   "nombre": "Rasuradora Daily +🎁(Hojilla)",
+   "estado": "aprobar",
+   "items": [
+    {
+     "sku": "MC-33131-SC-1001",
+     "nombre": "HOJILLA REPUESTO - Rasuradora DAILY SHAVER",
+     "qty": 1,
+     "costo": 3111,
+     "lista": 17990,
+     "stock": 2266
+    },
+    {
+     "sku": "MC-33081-AZ-1001",
+     "nombre": "Rasuradora Facial DAILY SHAVER",
+     "qty": 1,
+     "costo": 11492,
+     "lista": 49990,
+     "stock": 3016
+    }
+   ],
+   "precioTier2": 49990,
+   "precioEvg": 49990,
+   "precioComparacion": 67980,
+   "recomendado": {
+    "precio": 49990,
+    "nota": "Se mantiene su precio: ya está en el mínimo que cumple la meta de margen."
+   },
+   "alternativa": null,
+   "evidencia": [
+    "Margen a $49.990: 65,2%. Cumple justo la meta de 65% para combos; no hay espacio para bajar el precio.",
+    "El precio es el de lista de la Daily Shaver: lo que cambia es la hojilla de regalo ($17.990 de lista, $3.111 de costo).",
+    "En 2026 la Daily Shaver sola se vendió entre $40.100 y $45.900 en promedio mensual (Cyber de junio: 5.817 unidades a $40.100). Solo el 27% de las unidades se vendió a $49.990 o más."
+   ],
+   "riesgos": [
+    "Se pide pagar unos $5.000 más que el precio habitual para llevarse la hojilla. Si el cliente no percibe ese valor, la conversión puede ser baja."
+   ]
+  },
+  {
+   "id": "lobo-7",
+   "orden": 7,
+   "nombre": "PACK DE JABONES",
+   "estado": "aprobar",
+   "items": [
+    {
+     "sku": "MC-33451-SC-7021",
+     "nombre": "Hombre Mino by MyCOCOS® aroma cítrico Jabon Corporal",
+     "qty": 1,
+     "costo": 1962,
+     "lista": 8990,
+     "stock": 329
+    },
+    {
+     "sku": "MC-33451-SC-7011",
+     "nombre": "Cypress Casanova by MyCOCOS® aroma a ciprés Jabon Corporal",
+     "qty": 1,
+     "costo": 1962,
+     "lista": 8990,
+     "stock": 400
+    },
+    {
+     "sku": "MC-33451-SC-7001",
+     "nombre": "Wachito Rico by MyCOCOS® aroma Aceite de coco Jabon corporal",
+     "qty": 1,
+     "costo": 1962,
+     "lista": 8990,
+     "stock": 412
+    },
+    {
+     "sku": "MC-33441-SC-1001",
+     "nombre": "Toallitas Húmedas 15 und - WIPES TO GO",
+     "qty": 1,
+     "costo": 549,
+     "lista": 4990,
+     "stock": 3504
+    }
+   ],
+   "precioTier2": 21990,
+   "precioEvg": 23890,
+   "precioComparacion": 27000,
+   "recomendado": {
+    "precio": 21990,
+    "nota": "Se mantiene su precio: está en el mínimo que cumple la meta de margen."
+   },
+   "alternativa": null,
+   "evidencia": [
+    "Margen a $21.990: 65,2%. Cumple justo la meta de 65% para combos.",
+    "El pack de 3 jabones se vendió en 2026 a $19.212 en promedio (751 unidades) y ninguna unidad a $21.990 o más. Este pack suma toallitas, que justifican cerca de 14% más."
+   ],
+   "riesgos": [
+    "Stock limitado: alcanza para 329 packs (limita el jabón Hombre Mino). Los jabones también los usa el Barber Kit."
+   ]
+  },
+  {
+   "id": "lobo-2",
+   "orden": 2,
+   "nombre": "RASURADORA MyCOCOS® 4.0+🎁 (Hojilla)",
+   "estado": "ajustar",
+   "items": [
+    {
+     "sku": "MC-33011-NE-1004",
+     "nombre": "RASURADORA MyCOCOS® 4.0 BLACK",
+     "qty": 1,
+     "costo": 11322,
+     "lista": 57990,
+     "stock": 8014
+    },
+    {
+     "sku": "MC-33131-AZ-1002",
+     "nombre": "HOJILLAS SKINSECURE MyCOCOS® 4.0 Azul",
+     "qty": 1,
+     "costo": 2503,
+     "lista": 17990,
+     "stock": 1607
+    }
+   ],
+   "precioTier2": 55990,
+   "precioEvg": 59990,
+   "precioComparacion": 77980,
+   "recomendado": {
+    "precio": 47990,
+    "nota": "Bajar el Tier 2 a $47.990, el mínimo que cumple la meta (margen 65,7%)."
+   },
+   "alternativa": null,
+   "evidencia": [
+    "Es el ESENCIAL KIT 4.0 que ya se vende (rasuradora 4.0 + hojilla). De enero a mayo de 2026 se vendió entre $49.800 y $51.600 (promedio ~$50.500), con 420 a 780 unidades por mes.",
+    "Con el Cyber de junio ($44.900) vendió 952 unidades. En julio, con precio de $62.300, solo 64 unidades en 17 días.",
+    "$55.990 queda más de 10% sobre el precio habitual: no se percibe como oferta y es el tramo donde el volumen cae. Su margen (70,6%) deja espacio para bajarlo."
+   ],
+   "riesgos": [
+    "Si queda en $55.990 es probable que venda menos que el ESENCIAL KIT a su precio normal."
+   ]
+  },
+  {
+   "id": "lobo-1",
+   "orden": 1,
+   "nombre": "The Crack Pack (La rutina definitiva)",
+   "estado": "ajustar",
+   "items": [
+    {
+     "sku": "MC-33011-NE-1004",
+     "nombre": "RASURADORA MyCOCOS® 4.0 BLACK",
+     "qty": 1,
+     "costo": 11322,
+     "lista": 57990,
+     "stock": 8014
+    },
+    {
+     "sku": "MC-33051-AZ-1001",
+     "nombre": "Safety Razor Afeitadora Mycocos Maquina De Afeitar Barba",
+     "qty": 1,
+     "costo": 7498,
+     "lista": 33990,
+     "stock": 2471
+    },
+    {
+     "sku": "MC-33131-NE-1002",
+     "nombre": "HOJILLAS SKINSECURE MyCOCOS® 4.0 Negra",
+     "qty": 1,
+     "costo": 2503,
+     "lista": 17990,
+     "stock": 1816
+    },
+    {
+     "sku": "MC-33081-AZ-1001",
+     "nombre": "Rasuradora Facial DAILY SHAVER",
+     "qty": 1,
+     "costo": 11492,
+     "lista": 49990,
+     "stock": 3016
+    },
+    {
+     "sku": "MC-33371-SC-1002",
+     "nombre": "Desodorante de Cocos - MyCOCOS® 30 ML",
+     "qty": 1,
+     "costo": 2118,
+     "lista": 13990,
+     "stock": 1373
+    },
+    {
+     "sku": "MC-22201-AZ-1001",
+     "nombre": "TRAVEL BAG MyCOCOS® 3.0 (Azul)",
+     "qty": 1,
+     "costo": 10056,
+     "lista": 35990,
+     "stock": 2000
+    }
+   ],
+   "precioTier2": 147990,
+   "precioEvg": 155990,
+   "precioComparacion": 269930,
+   "recomendado": {
+    "precio": 152990,
+    "nota": "Subir el Tier 2 a $152.990 (margen 65,0%)."
+   },
+   "alternativa": null,
+   "evidencia": [
+    "Margen a $147.990: 63,8%, 1,2 puntos bajo la meta de 65%. Con $152.990 cumple.",
+    "En 2026 (enero a julio) el Crack Pack se vendió a $153.246 en promedio, y el 51% de las unidades a $152.990 o más.",
+    "$147.990 es casi el precio del Cyber de junio ($145.600, 69 unidades): como Tier 2 queda pegado al Tier 1.",
+    "Es un producto de poco volumen: 127 unidades de enero a julio de 2026 (10 a 12 por mes, 69 en el Cyber de junio)."
+   ],
+   "riesgos": [
+    "Aunque se venda bien, el aporte total es pequeño por el volumen. Stock: alcanza para 1.373 packs (limita el desodorante)."
+   ]
+  },
+  {
+   "id": "lobo-3",
+   "orden": 3,
+   "nombre": "Trio Dinamico MyCOCOS+🎁(Hojilla - wipes 50 uni)",
+   "estado": "no",
+   "items": [
+    {
+     "sku": "MC-33081-AZ-1001",
+     "nombre": "Rasuradora Facial DAILY SHAVER",
+     "qty": 1,
+     "costo": 11492,
+     "lista": 49990,
+     "stock": 3016
+    },
+    {
+     "sku": "MC-33051-AZ-1001",
+     "nombre": "Safety Razor Afeitadora Mycocos Maquina De Afeitar Barba",
+     "qty": 1,
+     "costo": 7498,
+     "lista": 33990,
+     "stock": 2471
+    },
+    {
+     "sku": "MC-33011-NE-1004",
+     "nombre": "RASURADORA MyCOCOS® 4.0 BLACK",
+     "qty": 1,
+     "costo": 11322,
+     "lista": 57990,
+     "stock": 8014
+    },
+    {
+     "sku": "MC-33441-SC-1002",
+     "nombre": "Wipes MyCOCOS Daily Use 50 UNITS",
+     "qty": 1,
+     "costo": 851,
+     "lista": 6990,
+     "stock": 3884
+    },
+    {
+     "sku": "MC-33131-NE-1002",
+     "nombre": "HOJILLAS SKINSECURE MyCOCOS® 4.0 Negra",
+     "qty": 1,
+     "costo": 2503,
+     "lista": 17990,
+     "stock": 1816
+    }
+   ],
+   "precioTier2": 95990,
+   "precioEvg": 95990,
+   "precioComparacion": 166950,
+   "recomendado": {
+    "precio": 114990,
+    "nota": "Para llegar a 65% tendría que costar $114.990, muy por encima de lo que se ha vendido."
+   },
+   "alternativa": {
+    "titulo": "Alternativa: sin la Safety Razor",
+    "quitar": [
+     "MC-33051-AZ-1001"
+    ],
+    "precio": 89990,
+    "nota": "Costo $26.168, a $89.990 el margen es 65,4%, cerca del precio promedio del PERFECT TRIO ($87.508)."
+   },
+   "evidencia": [
+    "Margen a $95.990: 58,3%, 6,7 puntos bajo la meta. Tier 2 y precio normal (EVG) son el mismo precio: no hay descuento.",
+    "Los tres rasuradores (4.0, Daily y Safety Razor) suman $30.312 de costo: 90% del costo del pack.",
+    "El KIT PERFECT TRIO se vendió en 2026 a $87.508 en promedio, y solo el 16% de las unidades a $95.990 o más."
+   ],
+   "riesgos": [
+    "Con este precio y esta composición el pack pierde margen o no se vende."
+   ]
+  },
+  {
+   "id": "lobo-5",
+   "orden": 5,
+   "nombre": "Barber Kit",
+   "estado": "no",
+   "items": [
+    {
+     "sku": "MC-33411-SC-1001",
+     "nombre": "KIT BARBA - MyCOCOS®",
+     "qty": 1,
+     "costo": 3864,
+     "lista": 17990,
+     "stock": 1022
+    },
+    {
+     "sku": "MC-33341-SC-1651",
+     "nombre": "ESPUMA PARA AFEITAR - MyCOCOS 150 ML",
+     "qty": 1,
+     "costo": 2313,
+     "lista": 17990,
+     "stock": 3317
+    },
+    {
+     "sku": "MC-33321-SC-5651",
+     "nombre": "BÁLSAMO AFTER SHAVE - MyCOCOS 50ML",
+     "qty": 1,
+     "costo": 2550,
+     "lista": 14990,
+     "stock": 2788
+    },
+    {
+     "sku": "MC-33441-SC-1001",
+     "nombre": "Toallitas Húmedas 15 und - WIPES TO GO",
+     "qty": 1,
+     "costo": 549,
+     "lista": 4990,
+     "stock": 3504
+    },
+    {
+     "sku": "MC-33071-NE-1002",
+     "nombre": "Rasuradora de barba MyBEARD® PRO",
+     "qty": 1,
+     "costo": 18507,
+     "lista": 53990,
+     "stock": 1386
+    },
+    {
+     "sku": "MC-33451-SC-7011",
+     "nombre": "Cypress Casanova by MyCOCOS® aroma a ciprés Jabon Corporal",
+     "qty": 1,
+     "costo": 1962,
+     "lista": 8990,
+     "stock": 400
+    }
+   ],
+   "precioTier2": 73990,
+   "precioEvg": 75990,
+   "precioComparacion": 104960,
+   "recomendado": {
+    "precio": 101990,
+    "nota": "Para llegar a 65% tendría que costar $101.990, casi el precio de lista de todo junto."
+   },
+   "alternativa": {
+    "titulo": "Alternativa: sin la MyBEARD PRO",
+    "quitar": [
+     "MC-33071-NE-1002"
+    ],
+    "precio": 39990,
+    "nota": "Costo $11.238, a $39.990 el margen es 66,6%. Cambia el concepto: pasa a ser un kit de cuidado sin rasuradora."
+   },
+   "evidencia": [
+    "Margen a $73.990: 52,2%, 12,8 puntos bajo la meta de 65%.",
+    "La MyBEARD PRO pesa 62% del costo del kit ($18.507 de $29.745).",
+    "La MyBEARD PRO sola se vendió en 2026 a $49.412 en promedio y nunca a $73.990 o más: el kit completo apunta a un ticket que no se ha dado."
+   ],
+   "riesgos": [
+    "Stock: alcanza para 400 kits (limita el jabón Cypress Casanova)."
+   ]
+  }
+ ]
+}
