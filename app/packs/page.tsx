@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useData } from '@/lib/context'
-import { detectarCategoria, margenPorPrecio, gananciaPorPrecio, type Categoria } from '@/lib/pricing-tiers'
+import { detectarCategoria, margenPorPrecio, gananciaPorPrecio, desgloseIva, type Categoria } from '@/lib/pricing-tiers'
 import TierScenarios from '@/components/TierScenarios'
 import { Package, Plus, X, Wrench, Trophy, List, Gift, AlertCircle, Plane, Search, Bookmark, Download, Upload, Trash2, ClipboardCheck } from 'lucide-react'
 import { filtrarPorTexto } from '@/lib/search'
@@ -708,12 +708,14 @@ export default function Packs() {
                         Ganas {mgSu.toFixed(1)}% · {mgSu >= v.meta ? 'cumple' : `${(v.meta - mgSu).toFixed(1)} pts bajo`} la meta de {v.meta}%
                       </p>
                       <p className="text-[11px] text-gray-500">= {fmt(gananciaPorPrecio(v.costo, p.precioTier2))} de ganancia por pack</p>
+                      <p className="text-[11px] text-gray-400">Neto {fmt(desgloseIva(p.precioTier2).neto)} + IVA {fmt(desgloseIva(p.precioTier2).iva)}</p>
                       {dtoComp > 0 && <p className="text-[11px] text-gray-400 mt-0.5">{dtoComp}% bajo su precio de comparación ({fmt(p.precioComparacion)})</p>}
                     </div>
                     <div className="border border-gray-200 rounded-xl p-3">
                       <p className="text-xs text-gray-500">Mínimo por regla ({v.meta}%)</p>
                       <p className="text-xl font-bold text-gray-900">{fmt(v.pisoPrecio)}</p>
                       <p className="text-xs text-gray-500">Ganas {mgPiso.toFixed(1)}% · {fmt(gananciaPorPrecio(v.costo, v.pisoPrecio))} por pack</p>
+                      <p className="text-[11px] text-gray-400">Neto {fmt(desgloseIva(v.pisoPrecio).neto)} + IVA {fmt(desgloseIva(v.pisoPrecio).iva)}</p>
                       <p className="text-[11px] text-gray-400 mt-0.5">Precio normal (EVG) de ellos: {fmt(p.precioEvg)}</p>
                     </div>
                     {p.estado !== 'no' && (
@@ -721,6 +723,7 @@ export default function Packs() {
                       <p className="text-xs text-gray-600 font-medium">Recomendado</p>
                       <p className="text-xl font-bold text-gray-900">{fmt(p.recomendado.precio)}</p>
                       <p className={`text-xs font-medium ${mgRec >= v.meta ? 'text-green-700' : 'text-red-600'}`}>Ganas {mgRec.toFixed(1)}% · {fmt(gananciaPorPrecio(v.costo, p.recomendado.precio))} por pack</p>
+                      <p className="text-[11px] text-gray-400">Neto {fmt(desgloseIva(p.recomendado.precio).neto)} + IVA {fmt(desgloseIva(p.recomendado.precio).iva)}</p>
                       <p className="text-[11px] text-gray-500 mt-0.5">{p.recomendado.nota}</p>
                     </div>
                     )}
@@ -871,6 +874,7 @@ export default function Packs() {
                       <div>
                         <p className="text-xs text-emerald-700">{g.precioUnico.etiqueta}</p>
                         <p className="text-2xl font-bold text-gray-900">{fmt(g.precioUnico.valor)}</p>
+                        <p className="text-[11px] text-gray-500">Neto {fmt(desgloseIva(g.precioUnico.valor).neto)} + IVA {fmt(desgloseIva(g.precioUnico.valor).iva)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-gray-500">Ganas</p>
@@ -886,6 +890,7 @@ export default function Packs() {
 
           <p className="text-xs text-gray-400 mt-4">
             Los packs guardados quedan en este navegador. Para pasarlos a otra persona o computador, usa Exportar y luego Importar.
+            Los precios incluyen IVA (19%); la ganancia se calcula sobre el precio sin IVA menos el costo.
           </p>
         </div>
       )}

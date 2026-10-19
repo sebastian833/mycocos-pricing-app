@@ -54,6 +54,12 @@ export function precioPorMargen(costo: number, margen: number): number {
 }
 
 // Retorna el % margen neto dado un precio bruto (con IVA) y un costo
+// Desglose de un precio con IVA incluido: neto + IVA
+export function desgloseIva(precioBruto: number): { neto: number; iva: number } {
+  const neto = Math.round(precioBruto / IVA)
+  return { neto, iva: Math.round(precioBruto) - neto }
+}
+
 // Ganancia en plata de una unidad: precio sin IVA menos costo
 export function gananciaPorPrecio(costo: number, precioBruto: number): number {
   return Math.round(precioBruto / IVA) - costo

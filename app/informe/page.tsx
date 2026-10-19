@@ -236,7 +236,7 @@ export default function Informe() {
                     <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap">
                       {delta !== null
                         ? <span style={{ color: delta >= 0 ? '#3B6D11' : '#A32D2D' }}>
-                            {delta >= 0 ? '+' : ''}{fmt(delta)}
+                            {delta >= 0 ? '+' : '−'}{fmt(Math.abs(delta))}
                           </span>
                         : <span className="text-gray-300">—</span>
                       }
@@ -260,7 +260,7 @@ export default function Informe() {
       </div>
 
       <p className="text-xs text-gray-400 mt-3">
-        El margen total suma lo que dejó cada venta del mes. El margen por unidad usa el precio y el costo típicos del mes, por eso puede no multiplicar exacto con las unidades.
+        Los precios incluyen IVA (19%) y el margen se calcula sobre el precio sin IVA. El margen total suma lo que dejó cada venta del mes. El margen por unidad usa el precio y el costo típicos del mes, por eso puede no multiplicar exacto con las unidades.
         {marcaActual.id === 'myhuevos' && ' En MyHUEVOS Colombia el reporte de ventas no trae costo: se usa el costo actual de la maestra en todos los meses.'}
       </p>
     </div>

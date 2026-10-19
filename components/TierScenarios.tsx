@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { calcularEscenarios, margenPorPrecio, roundChilean, type Categoria } from '@/lib/pricing-tiers'
+import { calcularEscenarios, margenPorPrecio, roundChilean, desgloseIva, type Categoria } from '@/lib/pricing-tiers'
 import { useData } from '@/lib/context'
 import { Flame, Star, Leaf, Gift, Boxes, Plus, X, Search, Save } from 'lucide-react'
 import { filtrarPorTexto } from '@/lib/search'
@@ -282,10 +282,14 @@ export default function TierScenarios({
                 Ganas {gananciaPct}
               </div>
               <p className="text-xs text-gray-500 mt-1.5">= {fmt(gananciaPesos)} de ganancia c/u</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Neto {fmt(desgloseIva(e.precioSugerido).neto)} + IVA {fmt(desgloseIva(e.precioSugerido).iva)}</p>
             </div>
           )
         })}
       </div>
+      <p className="text-xs text-gray-400 -mt-2 mb-5">
+        Todos los precios incluyen IVA (19%). La ganancia se calcula sobre el precio sin IVA menos el costo, que también es sin IVA.
+      </p>
 
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
         <p className="text-sm text-gray-700 font-medium mb-1">Precio &quot;antes&quot; para mostrar el descuento</p>
@@ -324,6 +328,9 @@ export default function TierScenarios({
             <p className="text-xs text-gray-400">
               {precioCustom !== '' ? fmt(Math.round(Number(precioCustom) / 1.19) - costoTotal) : '—'} por unidad
             </p>
+            {precioCustom !== '' && Number(precioCustom) > 0 && (
+              <p className="text-[11px] text-gray-500">Neto {fmt(desgloseIva(Number(precioCustom)).neto)} + IVA {fmt(desgloseIva(Number(precioCustom)).iva)}</p>
+            )}
           </div>
         </div>
       </div>
