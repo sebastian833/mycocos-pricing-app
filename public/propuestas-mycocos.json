@@ -12,7 +12,7 @@
   {
    "id": "lobo-4",
    "orden": 4,
-   "nombre": "Rasuradora Daily +🎁(Hojilla)",
+   "nombre": "Rasuradora Daily +🎁(Hojilla Daily)",
    "estado": "aprobar",
    "items": [
     {
@@ -107,7 +107,7 @@
   {
    "id": "lobo-2",
    "orden": 2,
-   "nombre": "RASURADORA MyCOCOS® 4.0+🎁 (Hojilla)",
+   "nombre": "RASURADORA MyCOCOS® 4.0+🎁 (Hojilla 4.0)",
    "estado": "ajustar",
    "items": [
     {
@@ -220,7 +220,7 @@
   {
    "id": "lobo-3",
    "orden": 3,
-   "nombre": "Trio Dinamico MyCOCOS+🎁(Hojilla - wipes 50 uni)",
+   "nombre": "Trio Dinamico MyCOCOS+🎁(Hojilla 4.0 + wipes 50 uni)",
    "estado": "no",
    "items": [
     {
