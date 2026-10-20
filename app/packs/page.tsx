@@ -56,6 +56,16 @@ const ESTADO_VISTA = {
   no: { texto: 'No aprobar como está', chip: 'bg-red-100 text-red-800', borde: 'border-red-200' },
 } as const
 
+const pc = (n: number) => n.toFixed(1).replace('.', ',')
+
+const DESCRIPCION_MODO: Record<Modo, string> = {
+  ganadores: 'Los combos que hoy más se venden. Elige uno para ver cuánto cuesta y a qué precio ofrecerlo.',
+  todos: 'Todos los combos que se han vendido, con lo que trae cada uno.',
+  nuevo: 'Arma un combo nuevo en 4 pasos: elige los productos, ponle nombre, mira los precios y guárdalo.',
+  guardados: 'Los combos que armaste y guardaste en este navegador.',
+  aprobar: 'Combos propuestos para una campaña. Te decimos si conviene aprobarlos, con los números del histórico.',
+}
+
 export default function Packs() {
   const { data, marcaActual } = useData()
   const router = useRouter()
@@ -218,7 +228,7 @@ export default function Packs() {
           <Package className="text-indigo-600" size={20} />
           <h1 className="text-xl font-semibold text-gray-900">Packs y combos</h1>
         </div>
-        <p className="text-sm text-gray-500">Revisa los combos que más se venden y arma otros nuevos</p>
+        <p className="text-sm text-gray-500">Aquí ves cuánto cuesta cada combo, a qué precio venderlo y cuánto ganas. También puedes armar combos nuevos y guardarlos.</p>
       </div>
 
       {/* Selector de modo */}
@@ -256,6 +266,7 @@ export default function Packs() {
           </button>
         )}
       </div>
+      <p className="text-sm text-gray-500 mb-4">{DESCRIPCION_MODO[modo]}</p>
 
       {/* ===== GANADORES ===== */}
       {modo === 'ganadores' && !ganador && (
@@ -290,6 +301,7 @@ export default function Packs() {
           <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden mb-5">
             <div className="px-4 py-3 border-b border-gray-100">
               <span className="text-sm font-medium text-gray-700">Qué trae este pack</span>
+              <p className="text-xs text-gray-400 mt-0.5">Si un producto llegó por avión y salió más caro, toca «Costo aéreo» para sumar la diferencia.</p>
             </div>
             <div className="divide-y divide-gray-100">
               {ganador.componentes.map((c, i) => {
@@ -332,10 +344,10 @@ export default function Packs() {
                         )}
                         <button
                           onClick={() => setExpandido(abierto ? null : key)}
-                          className="text-gray-300 hover:text-sky-500 transition-colors"
-                          title="Agregar costo aéreo u otro ajuste"
+                          className="flex items-center gap-1 text-xs font-medium text-sky-600 hover:text-sky-800 transition-colors"
+                          title="Si este producto llegó por avión y salió más caro, suma la diferencia aquí"
                         >
-                          <Plane size={15} />
+                          <Plane size={14} /> Costo aéreo
                         </button>
                       </div>
                     </div>
@@ -433,7 +445,7 @@ export default function Packs() {
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Cantidad</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Último costo</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Subtotal</th>
-                  <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-500">✈️</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-500">Costo aéreo</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -456,8 +468,8 @@ export default function Packs() {
                         <td className="px-4 py-2.5 text-right text-gray-500">{c.costo_unit > 0 ? fmt(c.costo_unit) : 'sin dato'}</td>
                         <td className="px-4 py-2.5 text-right font-medium text-gray-900">{fmt((c.costo_unit + extra) * c.qty)}</td>
                         <td className="px-4 py-2.5 text-center">
-                          <button onClick={() => setExpandido(abierto ? null : key)} className="text-gray-300 hover:text-sky-500">
-                            <Plane size={14} />
+                          <button onClick={() => setExpandido(abierto ? null : key)} className="flex items-center gap-1 mx-auto text-xs font-medium text-sky-600 hover:text-sky-800" title="Si este producto llegó por avión y salió más caro, suma la diferencia aquí">
+                            <Plane size={13} /> Sumar
                           </button>
                         </td>
                       </tr>
@@ -577,10 +589,10 @@ export default function Packs() {
                         <span className="text-indigo-400 w-12 text-right">{pctDelTotal.toFixed(0)}%</span>
                         <button
                           onClick={() => setExpandido(abierto ? null : it.sku)}
-                          className="ml-2 text-gray-300 hover:text-sky-500"
-                          title="Agregar costo aéreo u otro ajuste"
+                          className="ml-2 flex items-center gap-0.5 text-[11px] font-medium text-sky-600 hover:text-sky-800"
+                          title="Si este producto llegó por avión y salió más caro, suma la diferencia aquí"
                         >
-                          <Plane size={13} />
+                          <Plane size={12} /> aéreo
                         </button>
                         <button onClick={() => quitarItem(it.sku)} className="ml-1.5 text-gray-300 hover:text-red-500">
                           <X size={13} />
@@ -637,6 +649,7 @@ export default function Packs() {
                   {' '}· Es un <strong>{categoriaNuevo === 'pack' ? 'pack de unidades iguales' : 'combo de productos distintos'}</strong>
                 </span>
               </div>
+              <h2 className="text-sm font-semibold text-gray-900 mb-2">3. Mira a qué precio venderlo</h2>
               <TierScenarios
                 costo={costoNuevo}
                 categoria={categoriaNuevo}
@@ -687,6 +700,17 @@ export default function Packs() {
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${e.chip}`}>{e.texto}</span>
                   </div>
 
+                  {(() => {
+                    const gSu = gananciaPorPrecio(v.costo, p.precioTier2)
+                    const gRec = gananciaPorPrecio(v.costo, p.recomendado.precio)
+                    const resumen = {
+                      aprobar: `Se puede aprobar tal cual: con ${fmt(p.precioTier2)} gana ${pc(mgSu)}% y la meta es ${v.meta}%. Cada 100 packs que se vendan dejan ${fmt(gSu * 100)} de ganancia.`,
+                      ajustar: `${p.recomendado.nota} Con el precio propuesto (${fmt(p.precioTier2)}) gana ${pc(mgSu)}% y la meta es ${v.meta}%. Con ${fmt(p.recomendado.precio)}, cada 100 packs que se vendan dejan ${fmt(gRec * 100)} de ganancia.`,
+                      no: `No se recomienda así: con ${fmt(p.precioTier2)} gana solo ${pc(mgSu)}% y la meta es ${v.meta}%.${p.alternativa ? ' Mira la alternativa más abajo.' : ''}`,
+                    }
+                    return <p className={`text-sm rounded-xl px-4 py-3 mb-3 ${e.chip}`}>{resumen[p.estado]}</p>
+                  })()}
+
                   <div className="border border-gray-100 rounded-xl divide-y divide-gray-100 mb-3">
                     {p.items.map(it => (
                       <div key={it.sku} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
@@ -702,27 +726,27 @@ export default function Packs() {
 
                   <div className={`grid grid-cols-1 gap-3 mb-3 ${p.estado === 'no' ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
                     <div className="border border-gray-200 rounded-xl p-3">
-                      <p className="text-xs text-gray-500">Su precio Tier 2</p>
+                      <p className="text-xs text-gray-500">Precio propuesto (Tier 2)</p>
                       <p className="text-xl font-bold text-gray-900">{fmt(p.precioTier2)}</p>
                       <p className={`text-xs font-medium ${mgSu >= v.meta ? 'text-green-700' : 'text-red-600'}`}>
-                        Ganas {mgSu.toFixed(1)}% · {mgSu >= v.meta ? 'cumple' : `${(v.meta - mgSu).toFixed(1)} pts bajo`} la meta de {v.meta}%
+                        Ganas {pc(mgSu)}% · {mgSu >= v.meta ? 'cumple' : `${pc(v.meta - mgSu)} pts bajo`} la meta de {v.meta}%
                       </p>
                       <p className="text-[11px] text-gray-500">= {fmt(gananciaPorPrecio(v.costo, p.precioTier2))} de ganancia por pack</p>
                       <p className="text-[11px] text-gray-400">Neto {fmt(desgloseIva(p.precioTier2).neto)} + IVA {fmt(desgloseIva(p.precioTier2).iva)}</p>
                       {dtoComp > 0 && <p className="text-[11px] text-gray-400 mt-0.5">{dtoComp}% bajo su precio de comparación ({fmt(p.precioComparacion)})</p>}
                     </div>
                     <div className="border border-gray-200 rounded-xl p-3">
-                      <p className="text-xs text-gray-500">Mínimo por regla ({v.meta}%)</p>
+                      <p className="text-xs text-gray-500">Precio mínimo para ganar {v.meta}%</p>
                       <p className="text-xl font-bold text-gray-900">{fmt(v.pisoPrecio)}</p>
-                      <p className="text-xs text-gray-500">Ganas {mgPiso.toFixed(1)}% · {fmt(gananciaPorPrecio(v.costo, v.pisoPrecio))} por pack</p>
+                      <p className="text-xs text-gray-500">Ganas {pc(mgPiso)}% · {fmt(gananciaPorPrecio(v.costo, v.pisoPrecio))} por pack</p>
                       <p className="text-[11px] text-gray-400">Neto {fmt(desgloseIva(v.pisoPrecio).neto)} + IVA {fmt(desgloseIva(v.pisoPrecio).iva)}</p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">Precio normal (EVG) de ellos: {fmt(p.precioEvg)}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Precio normal que propusieron: {fmt(p.precioEvg)}</p>
                     </div>
                     {p.estado !== 'no' && (
                     <div className={`border-2 rounded-xl p-3 ${e.borde} bg-gray-50`}>
                       <p className="text-xs text-gray-600 font-medium">Recomendado</p>
                       <p className="text-xl font-bold text-gray-900">{fmt(p.recomendado.precio)}</p>
-                      <p className={`text-xs font-medium ${mgRec >= v.meta ? 'text-green-700' : 'text-red-600'}`}>Ganas {mgRec.toFixed(1)}% · {fmt(gananciaPorPrecio(v.costo, p.recomendado.precio))} por pack</p>
+                      <p className={`text-xs font-medium ${mgRec >= v.meta ? 'text-green-700' : 'text-red-600'}`}>Ganas {pc(mgRec)}% · {fmt(gananciaPorPrecio(v.costo, p.recomendado.precio))} por pack</p>
                       <p className="text-[11px] text-gray-400">Neto {fmt(desgloseIva(p.recomendado.precio).neto)} + IVA {fmt(desgloseIva(p.recomendado.precio).iva)}</p>
                       <p className="text-[11px] text-gray-500 mt-0.5">{p.recomendado.nota}</p>
                     </div>
@@ -749,7 +773,7 @@ export default function Packs() {
                     <div className="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
                       <p className="text-xs font-semibold text-indigo-800">{p.alternativa.titulo}</p>
                       <p className="text-xs text-indigo-700">
-                        Costo {fmt(v.costoAlt)} · a {fmt(p.alternativa.precio)} ganas {margenPorPrecio(v.costoAlt, p.alternativa.precio).toFixed(1)}% ({fmt(gananciaPorPrecio(v.costoAlt, p.alternativa.precio))} por pack). {p.alternativa.nota}
+                        Costo {fmt(v.costoAlt)} · a {fmt(p.alternativa.precio)} ganas {pc(margenPorPrecio(v.costoAlt, p.alternativa.precio))}% ({fmt(gananciaPorPrecio(v.costoAlt, p.alternativa.precio))} por pack). {p.alternativa.nota}
                       </p>
                     </div>
                   )}

@@ -60,7 +60,7 @@ export default function Informe() {
     labels: MESES,
     datasets: [
       {
-        label: `Precio lista ${latest}`,
+        label: `Precio sin descuento ${latest}`,
         data: pl25,
         borderColor: '#5DCAA5',
         backgroundColor: 'transparent',
@@ -72,7 +72,7 @@ export default function Informe() {
         order: 3,
       },
       {
-        label: `Precio bruto ${latest}`,
+        label: `Precio de venta ${latest}`,
         data: pb25,
         borderColor: '#378ADD',
         backgroundColor: 'rgba(55,138,221,0.07)',
@@ -84,7 +84,7 @@ export default function Informe() {
         order: 2,
       },
       {
-        label: `Precio bruto ${prev}`,
+        label: `Precio de venta ${prev}`,
         data: pb24,
         borderColor: 'rgba(239,159,39,0.7)',
         backgroundColor: 'transparent',
@@ -138,7 +138,7 @@ export default function Informe() {
     <div>
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-gray-900 mb-1">Informe de precios por temporada</h1>
-        <p className="text-sm text-gray-500">Evolución mensual de precio, descuento y volumen</p>
+        <p className="text-sm text-gray-500">Mira cómo se vendió este producto mes a mes: a qué precio, cuántas unidades y cuánto margen (ganancia) dejó.</p>
       </div>
 
       <select
@@ -151,13 +151,27 @@ export default function Informe() {
         ))}
       </select>
 
+      <details className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-5">
+        <summary className="text-sm font-medium text-gray-700 cursor-pointer">¿Cómo leo esta página?</summary>
+        <div className="mt-3 space-y-1.5 text-xs text-gray-600">
+          <p><b>Precio de venta:</b> el precio al que se vendió ese mes, con IVA.</p>
+          <p><b>Precio sin descuento:</b> el precio de lista, antes de cualquier descuento.</p>
+          <p><b>Descuento:</b> cuánto se rebajó en promedio.</p>
+          <p><b>Margen (%):</b> de cada $100 de venta sin IVA, cuántos quedan después de pagar el costo.</p>
+          <p><b>Margen por unidad ($):</b> lo que deja cada unidad vendida, en pesos.</p>
+          <p><b>Margen total ($):</b> lo que dejó el mes completo, sumando todas las ventas. Sirve para ver qué mes fue mejor de verdad.</p>
+          <p><b>Cambio de precio:</b> cuánto subió o bajó el precio frente al mismo mes del año anterior.</p>
+          <p><b>Colores:</b> el precio más alto del año va en verde y el más bajo en rojo. En el margen: verde desde 50%, amarillo entre 30% y 50%, rojo bajo 30%.</p>
+        </div>
+      </details>
+
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-5">
         {[
           { label: 'Precio máximo', value: fmt(maxPb), sub: MESES[meses.findIndex(m => m.pb25 === maxPb)] },
           { label: 'Precio mínimo', value: fmt(minPb), sub: MESES[meses.findIndex(m => m.pb25 === minPb)] },
-          { label: 'Spread anual', value: spread + '%', sub: 'máx vs mín' },
-          { label: 'Mes top volumen', value: MESES[meses.indexOf(maxQ)], sub: maxQ.q25.toLocaleString() + ' unidades' },
+          { label: 'Diferencia máx–mín', value: spread + '%', sub: 'el precio más alto sobre el más bajo' },
+          { label: 'Mes que más se vendió', value: MESES[meses.indexOf(maxQ)], sub: maxQ.q25.toLocaleString() + ' unidades' },
           { label: `Margen total ${latest}`, value: fmtPlata(totMargen), sub: totUnid > 0 ? `${totUnid.toLocaleString()} un. · ${fmt(totMargen / totUnid)} por unidad` : 'sin ventas' },
           { label: 'Mes que más margen dejó', value: totMargen > 0 ? MESES[mesTopMargen.mes - 1] : '—', sub: totMargen > 0 ? fmtPlata(margenMes(mesTopMargen)) : '' },
         ].map(c => (
@@ -172,9 +186,9 @@ export default function Informe() {
       {/* Legend */}
       <div className="flex gap-4 text-xs text-gray-500 mb-3 flex-wrap">
         {[
-          { color: '#378ADD', label: `Precio bruto ${latest}`, solid: true },
-          { color: '#5DCAA5', label: `Precio lista ${latest}`, solid: false },
-          { color: '#EF9F27', label: `Precio bruto ${prev}`, solid: false },
+          { color: '#378ADD', label: `Precio de venta ${latest}`, solid: true },
+          { color: '#5DCAA5', label: `Precio sin descuento ${latest}`, solid: false },
+          { color: '#EF9F27', label: `Precio de venta ${prev}`, solid: false },
           { color: 'rgba(55,138,221,0.3)', label: `Volumen ${latest}`, solid: true, bar: true },
         ].map(l => (
           <span key={l.label} className="flex items-center gap-1.5">
@@ -200,8 +214,21 @@ export default function Informe() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Mes','Temporada','Precio bruto','Precio lista','Dcto %','Margen %','Margen por un.',`Unid. ${latest}`,`Margen total ${latest}`,`P. bruto ${prev}`,`Margen total ${prev}`,'Δ vs ant.'].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">{h}</th>
+                {[
+                  ['Mes', ''],
+                  ['Temporada', 'Evento o época del año'],
+                  ['Precio de venta', 'Precio al que se vendió, con IVA'],
+                  ['Precio sin descuento', 'Precio de lista, antes de descuentos'],
+                  ['Descuento', 'Cuánto se rebajó en promedio'],
+                  ['Margen (%)', 'De cada $100 de venta sin IVA, cuántos quedan después de pagar el costo'],
+                  ['Margen por unidad ($)', 'Lo que deja cada unidad vendida, en pesos'],
+                  [`Unidades ${latest}`, 'Cuántas unidades se vendieron en el mes'],
+                  [`Margen total ${latest} ($)`, 'Lo que dejó el mes completo: suma de todas las ventas'],
+                  [`Precio de venta ${prev}`, 'El mismo mes del año anterior'],
+                  [`Margen total ${prev} ($)`, 'Lo que dejó el mismo mes del año anterior'],
+                  [`Cambio de precio vs ${prev}`, 'Cuánto subió o bajó el precio frente al año anterior'],
+                ].map(([h, tip]) => (
+                  <th key={h} title={tip} className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>

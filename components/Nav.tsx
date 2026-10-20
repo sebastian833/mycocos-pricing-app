@@ -4,15 +4,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useData } from '@/lib/context'
 import { BRANDS } from '@/lib/brands'
-import { BarChart2, TrendingUp, Sliders, MessageCircle, Upload, Package, ChevronDown } from 'lucide-react'
+import { BarChart2, TrendingUp, Sliders, MessageCircle, Home, Package, ChevronDown, HelpCircle } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 const links = [
-  { href: '/', label: 'Inicio', icon: Upload },
+  { href: '/', label: 'Inicio', icon: Home },
   { href: '/informe', label: 'Informe', icon: BarChart2 },
   { href: '/packs', label: 'Packs', icon: Package },
   { href: '/simulador', label: 'Simulador', icon: Sliders },
   { href: '/chat', label: 'Chat IA', icon: MessageCircle },
+  { href: '/ayuda', label: 'Ayuda', icon: HelpCircle },
 ]
 
 export default function Nav() {

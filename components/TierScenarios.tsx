@@ -325,6 +325,7 @@ export default function TierScenarios({
             <p className={`text-2xl font-bold ${margenCustom >= 55 ? 'text-green-400' : margenCustom >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
               {margenCustom.toFixed(0)}%
             </p>
+            <p className="text-xs text-gray-300">{margenCustom >= 55 ? 'Buen margen' : margenCustom >= 40 ? 'Margen justo' : 'Margen bajo: ojo'}</p>
             <p className="text-xs text-gray-400">
               {precioCustom !== '' ? fmt(Math.round(Number(precioCustom) / 1.19) - costoTotal) : '—'} por unidad
             </p>
@@ -339,7 +340,7 @@ export default function TierScenarios({
         <div className="mt-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4">
           <div className="flex items-center gap-1.5 mb-1">
             <Save size={15} className="text-emerald-700" />
-            <p className="text-sm font-semibold text-emerald-900">Guardar este pack</p>
+            <p className="text-sm font-semibold text-emerald-900">4. Guardar este pack (opcional)</p>
           </div>
           <p className="text-xs text-emerald-700 mb-3">
             Queda en la pestaña «Guardados» con sus productos, regalos y costos, para no armarlo de nuevo.
